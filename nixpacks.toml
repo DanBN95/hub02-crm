@@ -1,0 +1,20 @@
+# nixpacks config for Railway — NestJS API (monorepo)
+# Root dir in Railway must be "/" (repo root) so workspace packages are available.
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = [
+  "npm install -g pnpm@10",
+  "pnpm install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+  "pnpm -F api exec prisma generate",
+  "pnpm -F api build"
+]
+
+[start]
+cmd = "pnpm -F api start"
