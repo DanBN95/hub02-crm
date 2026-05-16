@@ -1,1 +1,146 @@
-/* stub — replaced by feat/sprint-0-design-system branch on merge */
+/* =============================================================================
+   hub02-crm — Design Tokens
+   -----------------------------------------------------------------------------
+   Tailwind v4 @theme block. Dark-first; light theme via [data-theme="light"]
+   on <html>. Prefers-color-scheme is honored only if no explicit data-theme
+   is set (handled in globals.css).
+   ============================================================================= */
+
+@import "tailwindcss";
+
+@theme {
+  /* ---------- Color: surfaces & foreground (dark-first) ---------- */
+  --color-bg:             oklch(15% 0 0);
+  --color-surface:        oklch(18% 0 0);
+  --color-surface-2:      oklch(21% 0 0);
+  --color-border:         oklch(28% 0 0 / 0.6);
+  --color-border-strong:  oklch(38% 0 0 / 0.9);
+  --color-fg:             oklch(96% 0 0);
+  --color-fg-muted:       oklch(72% 0 0);
+  --color-fg-subtle:      oklch(54% 0 0);
+
+  /* ---------- Color: accent (single saturated indigo) ---------- */
+  --color-accent:         oklch(65% 0.18 270);
+  --color-accent-hover:   oklch(70% 0.18 270);
+  --color-accent-fg:      oklch(98% 0 0);
+
+  /* ---------- Color: semantic ---------- */
+  --color-success:        oklch(70% 0.16 150);
+  --color-success-fg:     oklch(15% 0 0);
+  --color-warning:        oklch(78% 0.15 75);
+  --color-warning-fg:     oklch(15% 0 0);
+  --color-danger:         oklch(62% 0.22 25);
+  --color-danger-fg:      oklch(98% 0 0);
+  --color-info:           oklch(70% 0.12 230);
+  --color-info-fg:        oklch(15% 0 0);
+
+  /* ---------- Color: priority (pair with icon/label, never color alone) ---------- */
+  --color-priority-p0:    oklch(58% 0.23 25);   /* red 600 */
+  --color-priority-p1:    oklch(70% 0.18 50);   /* orange 500 */
+  --color-priority-p2:    oklch(82% 0.16 90);   /* yellow 500 */
+  --color-priority-p3:    oklch(60% 0 0);       /* neutral 500 */
+
+  /* ---------- Type scale ---------- */
+  --font-sans:  "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  --text-xs:    11px;     /* meta, badges */
+  --text-sm:    12px;     /* secondary, table headers */
+  --text-base:  13px;     /* table cells (default) */
+  --text-body:  14px;     /* default UI body */
+  --text-lg:    16px;     /* section headings */
+  --text-xl:    20px;     /* page title */
+  --text-2xl:   24px;     /* hero / empty-state header */
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.35;
+  --leading-normal: 1.45;
+
+  --tracking-tight: -0.01em;
+  --tracking-wide:  0.02em;
+
+  /* ---------- Spacing (4/8/12/16/20/24/32/40/56/72) ---------- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --space-18: 72px;
+
+  /* ---------- Radius ---------- */
+  --radius-xs:   3px;
+  --radius-sm:   4px;
+  --radius-md:   6px;   /* default */
+  --radius-lg:   8px;   /* cards */
+  --radius-xl:   12px;  /* slideovers */
+  --radius-full: 9999px;
+
+  /* ---------- Shadow (minimal; one elevation for floating menus) ---------- */
+  --shadow-none:    none;
+  --shadow-pop:     0 8px 24px -6px oklch(0% 0 0 / 0.45),
+                    0 2px 6px -2px oklch(0% 0 0 / 0.35);
+  --shadow-overlay: 0 24px 48px -12px oklch(0% 0 0 / 0.6),
+                    0 8px 16px -4px oklch(0% 0 0 / 0.4);
+
+  /* ---------- Motion ---------- */
+  --duration-fast:    120ms;  /* state (hover/press) */
+  --duration-base:    180ms;  /* default UI state */
+  --duration-layout:  240ms;  /* layout shifts */
+  --duration-overlay: 280ms;  /* slideovers, dialogs */
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in:  cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-std: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- Focus ring ---------- */
+  --ring-width: 2px;
+  --ring-color: var(--color-accent);
+  --ring-offset: 2px;
+
+  /* ---------- Z-index layers ---------- */
+  --z-base:     0;
+  --z-sticky:   10;
+  --z-dropdown: 30;
+  --z-overlay:  40;
+  --z-modal:    50;
+  --z-toast:    60;
+}
+
+/* ===========================================================================
+   Light theme — opt-in via [data-theme="light"] on <html>.
+   We do NOT auto-switch on prefers-color-scheme (avoids surprise flicker on
+   dense data UIs). globals.css contains a tiny inline-friendly script note
+   for honoring system preference when the user has not explicitly chosen.
+   =========================================================================== */
+[data-theme="light"] {
+  --color-bg:             oklch(98% 0 0);
+  --color-surface:        oklch(100% 0 0);
+  --color-surface-2:      oklch(96% 0 0);
+  --color-border:         oklch(85% 0 0 / 0.8);
+  --color-border-strong:  oklch(72% 0 0 / 0.9);
+  --color-fg:             oklch(18% 0 0);
+  --color-fg-muted:       oklch(40% 0 0);
+  --color-fg-subtle:      oklch(58% 0 0);
+
+  --color-accent:         oklch(54% 0.18 270);
+  --color-accent-hover:   oklch(48% 0.18 270);
+  --color-accent-fg:      oklch(98% 0 0);
+
+  --color-success:        oklch(52% 0.16 150);
+  --color-success-fg:     oklch(98% 0 0);
+  --color-warning:        oklch(62% 0.15 75);
+  --color-warning-fg:     oklch(15% 0 0);
+  --color-danger:         oklch(52% 0.22 25);
+  --color-danger-fg:      oklch(98% 0 0);
+  --color-info:           oklch(52% 0.12 230);
+  --color-info-fg:        oklch(98% 0 0);
+
+  --shadow-pop:     0 8px 24px -6px oklch(0% 0 0 / 0.12),
+                    0 2px 6px -2px oklch(0% 0 0 / 0.08);
+  --shadow-overlay: 0 24px 48px -12px oklch(0% 0 0 / 0.18),
+                    0 8px 16px -4px oklch(0% 0 0 / 0.10);
+}
