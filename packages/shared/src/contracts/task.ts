@@ -29,15 +29,14 @@ export const TaskSchema = z.object({
 
 export type Task = z.infer<typeof TaskSchema>;
 
-export const CreateTaskSchema = TaskSchema.pick({
-  workspaceId: true,
-  sprintId: true,
-  assigneeId: true,
-  title: true,
-  description: true,
-  priority: true,
-  status: true,
-  dueAt: true,
+export const CreateTaskSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(10_000).optional(),
+  priority: PrioritySchema.optional(),
+  status: StatusSchema.optional(),
+  sprintId: z.string().cuid().optional(),
+  assigneeId: z.string().cuid().optional(),
+  dueAt: z.string().datetime({ offset: true }).optional(),
 });
 export type CreateTaskDto = z.infer<typeof CreateTaskSchema>;
 
