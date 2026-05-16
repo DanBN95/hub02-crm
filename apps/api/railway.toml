@@ -1,0 +1,11 @@
+# Railway config — NestJS API service
+# Root Directory in Railway settings must be "/" (repo root).
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
