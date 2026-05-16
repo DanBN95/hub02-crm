@@ -1,9 +1,10 @@
+# Railway config — NestJS API service
+# Root Directory in Railway settings must be "/" (repo root).
+
 [build]
 builder = "NIXPACKS"
-buildCommand = "pnpm install --frozen-lockfile && pnpm -F api build"
 
 [deploy]
-startCommand = "pnpm -F api start"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"

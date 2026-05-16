@@ -1,0 +1,20 @@
+# nixpacks config for Railway — NestJS API (pnpm monorepo)
+# Railway root directory must be "/" (repo root).
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+# corepack is bundled with Node 22 — no PATH issue between RUN steps.
+cmds = [
+  "corepack enable && corepack prepare pnpm@10.19.0 --activate && pnpm install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+  "pnpm -F api exec prisma generate",
+  "pnpm -F api build"
+]
+
+[start]
+cmd = "pnpm -F api start"
