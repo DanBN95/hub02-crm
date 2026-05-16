@@ -12,8 +12,9 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('App', () => {
-  it('renders the app heading', () => {
+  it('renders the backlog view', () => {
     render(<App />, { wrapper });
-    expect(screen.getByText('Hub02 CRM')).toBeTruthy();
+    expect(screen.getByText('Backlog')).toBeTruthy();
+    expect(screen.getByText('+ New task')).toBeTruthy();
   });
 });

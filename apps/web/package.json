@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@hub02/shared": "workspace:*",
     "@tanstack/react-query": "^5.62.9",
     "@tanstack/react-router": "^1.95.0",

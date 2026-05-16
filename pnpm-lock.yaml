@@ -32,6 +32,9 @@ importers:
       '@nestjs/jwt':
         specifier: ^11.0.0
         version: 11.0.2(@nestjs/common@11.1.21(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@nestjs/mapped-types':
+        specifier: ^2.1.1
+        version: 2.1.1(@nestjs/common@11.1.21(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
       '@nestjs/passport':
         specifier: ^11.0.0
         version: 11.0.5(@nestjs/common@11.1.21(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)
@@ -120,6 +123,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.76.0(react@19.2.6))
       '@hub02/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -732,6 +738,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@hookform/resolvers@5.2.2':
+    resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
+    peerDependencies:
+      react-hook-form: ^7.55.0
+
   '@inquirer/ansi@1.0.2':
     resolution: {integrity: sha512-S8qNSZiYzFd0wAcyG5AXCvUHC5Sr7xpZ9wZ2py9XR88jUz8wooStVx5M6dRzczbBWjic9NP7+rY0Xi7qqK/aMQ==}
     engines: {node: '>=18'}
@@ -1030,6 +1041,19 @@ packages:
     peerDependencies:
       '@nestjs/common': ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
 
+  '@nestjs/mapped-types@2.1.1':
+    resolution: {integrity: sha512-SCCoMEJ6jdeI5h/N+KCVF1+pmg/hmEkNA5nHTS8Gvww7T/LCl4o1gFLinw2iQ60w7slFkszHcGLKGdazVI4F8A==}
+    peerDependencies:
+      '@nestjs/common': ^10.0.0 || ^11.0.0
+      class-transformer: ^0.4.0 || ^0.5.0
+      class-validator: ^0.13.0 || ^0.14.0 || ^0.15.0
+      reflect-metadata: ^0.1.12 || ^0.2.0
+    peerDependenciesMeta:
+      class-transformer:
+        optional: true
+      class-validator:
+        optional: true
+
   '@nestjs/passport@11.0.5':
     resolution: {integrity: sha512-ulQX6mbjlws92PIM15Naes4F4p2JoxGnIJuUsdXQPT+Oo2sqQmENEZXM7eYuimocfHnKlcfZOuyzbA33LwUlOQ==}
     peerDependencies:
@@ -1248,6 +1272,9 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@standard-schema/utils@0.3.0':
+    resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
 
   '@tailwindcss/node@4.3.0':
     resolution: {integrity: sha512-aFb4gUhFOgdh9AXo4IzBEOzBkkAxm9VigwDJnMIYv3lcfXCJVesNfbEaBl4BNgVRyid92AmdviqwBUBRKSeY3g==}
@@ -4575,6 +4602,11 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
+  '@hookform/resolvers@5.2.2(react-hook-form@7.76.0(react@19.2.6))':
+    dependencies:
+      '@standard-schema/utils': 0.3.0
+      react-hook-form: 7.76.0(react@19.2.6)
+
   '@inquirer/ansi@1.0.2': {}
 
   '@inquirer/checkbox@4.3.2(@types/node@22.19.19)':
@@ -4997,6 +5029,14 @@ snapshots:
       '@types/jsonwebtoken': 9.0.10
       jsonwebtoken: 9.0.3
 
+  '@nestjs/mapped-types@2.1.1(@nestjs/common@11.1.21(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)':
+    dependencies:
+      '@nestjs/common': 11.1.21(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      reflect-metadata: 0.2.2
+    optionalDependencies:
+      class-transformer: 0.5.1
+      class-validator: 0.14.4
+
   '@nestjs/passport@11.0.5(@nestjs/common@11.1.21(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)':
     dependencies:
       '@nestjs/common': 11.1.21(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -5168,6 +5208,8 @@ snapshots:
       '@sinonjs/commons': 3.0.1
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@standard-schema/utils@0.3.0': {}
 
   '@tailwindcss/node@4.3.0':
     dependencies:
