@@ -83,4 +83,12 @@ export class TasksController {
   async bulkDelete(@Body() dto: BulkDeleteDto) {
     await this.tasks.bulkDelete(dto.ids);
   }
+
+  @Get('workspaces/:workspaceId/sprints/:sprintId/board')
+  getBoardColumns(
+    @Param('workspaceId') workspaceId: string,
+    @Param('sprintId') sprintId: string,
+  ) {
+    return this.tasks.getBoardColumns(workspaceId, sprintId);
+  }
 }

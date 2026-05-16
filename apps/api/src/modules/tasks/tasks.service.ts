@@ -65,4 +65,8 @@ export class TasksService {
   bulkDelete(ids: string[]) {
     return this.repo.bulkDelete(ids);
   }
+
+  getBoardColumns(workspaceId: string, sprintId: string) {
+    return this.repo.getBoardColumns(workspaceId, sprintId);
+  }
 }

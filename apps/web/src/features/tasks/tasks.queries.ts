@@ -86,3 +86,12 @@ export function useBulkDelete(workspaceId: string) {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['tasks', workspaceId] }),
   });
 }
+
+export function useBoardColumns(workspaceId: string, sprintId: string | null) {
+  return useQuery({
+    queryKey: ['board', workspaceId, sprintId],
+    queryFn: () => tasksApi.getBoardColumns(workspaceId, sprintId!),
+    staleTime: 15_000,
+    enabled: !!workspaceId && !!sprintId,
+  });
+}

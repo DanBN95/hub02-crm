@@ -45,4 +45,7 @@ export const tasksApi = {
 
   bulkDelete: (workspaceId: string, ids: string[]): Promise<void> =>
     apiClient.delete(`/workspaces/${workspaceId}/tasks/bulk`, { data: { ids } }).then(() => undefined),
+
+  getBoardColumns: (workspaceId: string, sprintId: string): Promise<Record<string, TaskWithRelations[]>> =>
+    apiClient.get(`/workspaces/${workspaceId}/sprints/${sprintId}/board`).then((r) => r.data as Record<string, TaskWithRelations[]>),
 };

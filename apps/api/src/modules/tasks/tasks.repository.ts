@@ -81,4 +81,27 @@ export class TasksRepository {
     const result = await this.prisma.task.deleteMany({ where: { id: { in: ids } } });
     return result.count;
   }
+
+  async getBoardColumns(
+    workspaceId: string,
+    sprintId: string,
+  ): Promise<Record<string, TaskWithRelations[]>> {
+    const tasks = await this.prisma.task.findMany({
+      where: { workspaceId, sprintId },
+      include: taskWithRelations,
+      orderBy: { position: 'asc' },
+    });
+    const columns: Record<string, TaskWithRelations[]> = {
+      BACKLOG: [],
+      TODO: [],
+      IN_PROGRESS: [],
+      IN_REVIEW: [],
+      DONE: [],
+    };
+    for (const task of tasks) {
+      const col = columns[task.status];
+      if (col) col.push(task);
+    }
+    return columns;
+  }
 }
