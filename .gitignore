@@ -26,6 +26,9 @@ pnpm-debug.log*
 .vscode/
 *.swp
 
+# TypeScript build info
+*.tsbuildinfo
+
 # claude local
 .claude/settings.local.json
 
