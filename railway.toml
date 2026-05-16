@@ -1,6 +1,5 @@
 # Railway config — NestJS API service
-# Set "Root Directory" to "/" in the Railway service settings (not apps/api).
-# nixpacks.toml in this directory handles install/build/start phases.
+# Root Directory in Railway settings must be "/" (repo root).
 
 [build]
 builder = "NIXPACKS"

@@ -1,13 +1,13 @@
-# nixpacks config for Railway — NestJS API (monorepo)
-# Root dir in Railway must be "/" (repo root) so workspace packages are available.
+# nixpacks config for Railway — NestJS API (pnpm monorepo)
+# Railway root directory must be "/" (repo root).
 
 [phases.setup]
 nixPkgs = ["nodejs_22"]
 
 [phases.install]
+# corepack is bundled with Node 22 — no PATH issue between RUN steps.
 cmds = [
-  "npm install -g pnpm@10",
-  "pnpm install --frozen-lockfile"
+  "corepack enable && corepack prepare pnpm@10.19.0 --activate && pnpm install --frozen-lockfile"
 ]
 
 [phases.build]
