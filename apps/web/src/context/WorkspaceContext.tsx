@@ -18,13 +18,11 @@ export function useWorkspace() {
   return useContext(WorkspaceContext);
 }
 
-const IS_DEV = import.meta.env.DEV;
-
 async function bootstrap(): Promise<WorkspaceSummary | null> {
   try {
     await authApi.me();
   } catch {
-    if (!IS_DEV) return null;
+    // /auth/me returned 401 — try dev-login (server gates this via ALLOW_DEV_LOGIN)
     try {
       await authApi.devLogin();
     } catch {
