@@ -1,34 +1,20 @@
 import { useState } from 'react';
-import { BacklogView } from './features/tasks/components/BacklogView';
-import { SprintBoard } from './features/sprints/components/SprintBoard';
-
-type Tab = 'backlog' | 'board';
+import { Sidebar, type NavKey } from './components/layout/Sidebar';
+import { DocumentsView } from './features/documents/components/DocumentsView';
+import { SprintsTable } from './features/sprints/components/SprintsTable';
+import { TasksView } from './features/tasks/components/TasksView';
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('backlog');
+  const [nav, setNav] = useState<NavKey>('tasks');
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] flex flex-col">
-      <nav className="shrink-0 flex items-center gap-1 px-4 border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-        {(['backlog', 'board'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`px-3 py-2.5 text-[13px] font-medium capitalize border-b-2 transition-colors ${
-              tab === t
-                ? 'border-[var(--color-accent)] text-[var(--color-fg)]'
-                : 'border-transparent text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]'
-            }`}
-          >
-            {t === 'board' ? 'Sprint Board' : 'Backlog'}
-          </button>
-        ))}
-      </nav>
-
-      <div className="flex-1 overflow-hidden">
-        {tab === 'backlog' ? <BacklogView /> : <SprintBoard />}
-      </div>
+    <div className="h-screen w-screen bg-[var(--color-bg)] text-[var(--color-fg)] flex overflow-hidden">
+      <Sidebar active={nav} onSelect={setNav} />
+      <main className="flex-1 min-w-0 overflow-hidden">
+        {nav === 'tasks' && <TasksView />}
+        {nav === 'sprints' && <SprintsTable />}
+        {nav === 'documents' && <DocumentsView />}
+      </main>
     </div>
   );
 }

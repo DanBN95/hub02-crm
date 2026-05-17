@@ -19,9 +19,10 @@ interface Props {
   workspaceId: string;
   open: boolean;
   onClose: () => void;
+  defaultSprintId?: string;
 }
 
-export function CreateTaskSlideover({ workspaceId, open, onClose }: Props) {
+export function CreateTaskSlideover({ workspaceId, open, onClose, defaultSprintId }: Props) {
   const titleRef = useRef<HTMLInputElement>(null);
   const create = useCreateTask(workspaceId);
 
@@ -44,7 +45,10 @@ export function CreateTaskSlideover({ workspaceId, open, onClose }: Props) {
   }, [onClose]);
 
   const onSubmit = async (data: FormValues) => {
-    await create.mutateAsync(data);
+    await create.mutateAsync({
+      ...data,
+      ...(defaultSprintId ? { sprintId: defaultSprintId } : {}),
+    });
     onClose();
   };
 

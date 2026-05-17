@@ -12,9 +12,10 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('App', () => {
-  it('renders tab navigation and backlog view', () => {
+  it('renders the sidebar nav and defaults to Tasks view', () => {
     render(<App />, { wrapper });
-    expect(screen.getByText('Sprint Board')).toBeTruthy();
-    expect(screen.getByText('+ New task')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Sprints' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Documents' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Tasks' })).toBeTruthy();
   });
 });
