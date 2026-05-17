@@ -21,8 +21,11 @@ export function useTask(id: string) {
     queryKey: TASK_KEY(id),
     queryFn: () => tasksApi.get(id),
     staleTime: 0,
+    enabled: !!id,
   });
 }
+
+export const useTaskDetail = useTask;
 
 export function useCreateTask(workspaceId: string) {
   const qc = useQueryClient();

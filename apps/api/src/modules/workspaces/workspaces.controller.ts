@@ -1,4 +1,4 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import type { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -13,5 +13,10 @@ export class WorkspacesController {
   list(@Req() req: Request) {
     const user = req.user as User;
     return this.workspaces.findForUser(user.id);
+  }
+
+  @Get(':workspaceId/members')
+  members(@Param('workspaceId') workspaceId: string) {
+    return this.workspaces.findMembers(workspaceId);
   }
 }

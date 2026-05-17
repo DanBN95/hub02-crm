@@ -1,9 +1,11 @@
 import type { Task, CreateTaskDto, UpdateTaskDto } from '@hub02/shared';
 import { apiClient } from '../../lib/api-client';
 
-export interface TaskWithRelations extends Task {
+export interface TaskWithRelations extends Omit<Task, 'dueAt' | 'description'> {
   assignee: { id: string; name: string; avatarUrl: string | null; email: string } | null;
   sprint: { id: string; name: string } | null;
+  dueAt?: string | null;
+  description?: string | null;
 }
 
 export interface TasksPage {

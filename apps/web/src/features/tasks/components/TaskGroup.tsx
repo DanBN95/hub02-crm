@@ -1,115 +1,74 @@
 import { useState } from 'react';
+import type { Member } from '../../../lib/members';
 import type { TaskWithRelations } from '../tasks.api';
-import { useDeleteTask, useUpdateTask } from '../tasks.queries';
-import { TaskPriorityBadge } from './TaskPriorityBadge';
-import { TaskStatusBadge } from './TaskStatusBadge';
-
-const STATUS_OPTIONS = ['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE'] as const;
-
-function formatDate(d: Date | string | null | undefined) {
-  if (!d) return '—';
-  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(d));
-}
+import { useDeleteTask } from '../tasks.queries';
+import { DueDateCell } from './cells/DueDateCell';
+import { OwnerCell } from './cells/OwnerCell';
+import { PriorityCell } from './cells/PriorityCell';
+import { StatusCell } from './cells/StatusCell';
 
 interface TaskRowProps {
   task: TaskWithRelations;
   workspaceId: string;
+  members: Member[];
+  onOpenDetail: (taskId: string) => void;
 }
 
-function TaskRow({ task, workspaceId }: TaskRowProps) {
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(task.title);
-  const [hovered, setHovered] = useState(false);
-
-  const updateTask = useUpdateTask(workspaceId);
+function TaskRow({ task, workspaceId, members, onOpenDetail }: TaskRowProps) {
   const deleteTask = useDeleteTask(workspaceId);
 
-  const saveTitle = () => {
-    if (titleDraft.trim() && titleDraft !== task.title) {
-      updateTask.mutate({ id: task.id, dto: { title: titleDraft.trim() } });
-    } else {
-      setTitleDraft(task.title);
-    }
-    setEditingTitle(false);
-  };
-
   return (
-    <tr
-      className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-2)] transition-colors"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+    <tr className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-2)] transition-colors group">
+      {/* Title — click opens detail panel */}
       <td className="pl-3 pr-2 py-2.5 max-w-xs">
-        {editingTitle ? (
-          <input
-            autoFocus
-            value={titleDraft}
-            onChange={(e) => setTitleDraft(e.target.value)}
-            onBlur={saveTitle}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') saveTitle();
-              if (e.key === 'Escape') {
-                setTitleDraft(task.title);
-                setEditingTitle(false);
-              }
-            }}
-            className="w-full bg-[var(--color-surface-2)] border border-[var(--color-accent)] rounded px-2 py-0.5 text-[13px] text-[var(--color-fg)] outline-none"
-          />
-        ) : (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={() => setEditingTitle(true)}
-            onKeyDown={(e) => { if (e.key === 'Enter') setEditingTitle(true); }}
-            className="text-[13px] text-[var(--color-fg)] truncate block cursor-text hover:text-[var(--color-accent)]"
-          >
-            {task.title}
-          </span>
-        )}
+        <button
+          type="button"
+          onClick={() => onOpenDetail(task.id)}
+          className="text-[13px] text-[var(--color-fg)] truncate block w-full text-left
+                     hover:text-[var(--color-accent)] transition-colors"
+        >
+          {task.title}
+        </button>
       </td>
-      <td className="px-3 py-2.5 w-32">
-        <TaskStatusBadge
-          status={task.status as Parameters<typeof TaskStatusBadge>[0]['status']}
-          onClick={() => {
-            const cur = STATUS_OPTIONS.indexOf(task.status as typeof STATUS_OPTIONS[number]);
-            const next = STATUS_OPTIONS[(cur + 1) % STATUS_OPTIONS.length];
-            if (next) updateTask.mutate({ id: task.id, dto: { status: next } });
-          }}
+
+      {/* Status */}
+      <td className="px-3 py-2.5 w-36">
+        <StatusCell taskId={task.id} status={task.status as any} workspaceId={workspaceId} />
+      </td>
+
+      {/* Priority */}
+      <td className="px-3 py-2.5 w-28">
+        <PriorityCell taskId={task.id} priority={task.priority as any} workspaceId={workspaceId} />
+      </td>
+
+      {/* Owner */}
+      <td className="px-3 py-2.5 w-44">
+        <OwnerCell
+          taskId={task.id}
+          assignee={task.assignee}
+          members={members}
+          workspaceId={workspaceId}
         />
       </td>
-      <td className="px-3 py-2.5 w-20">
-        <TaskPriorityBadge
-          priority={task.priority as Parameters<typeof TaskPriorityBadge>[0]['priority']}
-        />
+
+      {/* Due */}
+      <td className="px-3 py-2.5 w-28">
+        <DueDateCell taskId={task.id} dueAt={task.dueAt} workspaceId={workspaceId} />
       </td>
-      <td className="px-3 py-2.5 text-[12px] text-[var(--color-fg-muted)] w-40">
-        {task.assignee ? (
-          <span className="flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded-full bg-[var(--color-accent)] text-[var(--color-accent-fg)] flex items-center justify-center text-[10px] font-semibold shrink-0">
-              {task.assignee.name[0]?.toUpperCase()}
-            </span>
-            <span className="truncate">{task.assignee.name}</span>
-          </span>
-        ) : (
-          <span className="text-[var(--color-fg-subtle)]">Unassigned</span>
-        )}
-      </td>
-      <td className="px-3 py-2.5 text-[12px] text-[var(--color-fg-muted)] w-24 tabular-nums">
-        {formatDate(task.dueAt)}
-      </td>
+
+      {/* Delete */}
       <td className="pr-3 py-2.5 w-10 text-right">
-        {hovered && (
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm('Delete this task?')) deleteTask.mutate(task.id);
-            }}
-            className="text-[var(--color-fg-subtle)] hover:text-[var(--color-danger)] p-1 rounded transition-colors"
-            aria-label="Delete task"
-          >
-            ✕
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => {
+            if (confirm('Delete this task?')) deleteTask.mutate(task.id);
+          }}
+          className="opacity-0 group-hover:opacity-100 text-[var(--color-fg-subtle)]
+                     hover:text-[var(--color-danger)] p-1 rounded transition-all"
+          aria-label="Delete task"
+        >
+          ✕
+        </button>
       </td>
     </tr>
   );
@@ -121,7 +80,9 @@ interface Props {
   tasks: TaskWithRelations[];
   color: string;
   workspaceId: string;
+  members: Member[];
   onAddTask: () => void;
+  onOpenDetail: (taskId: string) => void;
   defaultOpen?: boolean;
 }
 
@@ -131,34 +92,37 @@ export function TaskGroup({
   tasks,
   color,
   workspaceId,
+  members,
   onAddTask,
+  onOpenDetail,
   defaultOpen = true,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
     <div className="rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)]">
+      {/* Group header — colored left stripe replaced with tinted bg strip */}
       <div
-        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none border-l-[3px]"
-        style={{ borderLeftColor: color }}
+        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none"
+        style={{ background: `${color}12` }}
         onClick={() => setOpen((o) => !o)}
       >
         <button
           type="button"
-          aria-label={open ? 'Collapse group' : 'Expand group'}
-          className="text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-transform"
-          style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+          aria-label={open ? 'Collapse' : 'Expand'}
+          className="text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-transform shrink-0"
+          style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 150ms ease' }}
           onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M3 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <h3 className="text-[14px] font-semibold" style={{ color }}>
+        <h3 className="text-[13px] font-semibold" style={{ color }}>
           {title}
         </h3>
         {subtitle && (
-          <span className="text-[11px] text-[var(--color-fg-muted)]">{subtitle}</span>
+          <span className="text-[11px]" style={{ color: `${color}bb` }}>{subtitle}</span>
         )}
         <span className="ml-auto text-[11px] text-[var(--color-fg-subtle)] tabular-nums">
           {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
@@ -171,10 +135,10 @@ export function TaskGroup({
             <thead>
               <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/40">
                 <th className="pl-3 pr-2 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide">Task</th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-32">Status</th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-20">Priority</th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-40">Owner</th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-24">Due</th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-36">Status</th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-28">Priority</th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-44">Owner</th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium text-[var(--color-fg-muted)] uppercase tracking-wide w-28">Due</th>
                 <th className="w-10" />
               </tr>
             </thead>
@@ -187,7 +151,13 @@ export function TaskGroup({
                 </tr>
               ) : (
                 tasks.map((task) => (
-                  <TaskRow key={task.id} task={task} workspaceId={workspaceId} />
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    workspaceId={workspaceId}
+                    members={members}
+                    onOpenDetail={onOpenDetail}
+                  />
                 ))
               )}
             </tbody>
@@ -196,7 +166,9 @@ export function TaskGroup({
           <button
             type="button"
             onClick={onAddTask}
-            className="w-full text-left pl-9 pr-3 py-2 text-[12px] text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)] hover:bg-[var(--color-surface-2)] transition-colors border-t border-[var(--color-border)]"
+            className="w-full text-left pl-9 pr-3 py-2 text-[12px] text-[var(--color-fg-subtle)]
+                       hover:text-[var(--color-fg)] hover:bg-[var(--color-surface-2)]
+                       transition-colors border-t border-[var(--color-border)]"
           >
             + Add task
           </button>

@@ -7,12 +7,12 @@ const PRIORITY_COLOR: Record<string, string> = {
   P3: 'var(--color-priority-p3)',
 };
 
-function formatDue(d: Date | null | undefined) {
+function formatDue(d: Date | string | null | undefined) {
   if (!d) return null;
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(d));
 }
 
-function isOverdue(d: Date | null | undefined) {
+function isOverdue(d: Date | string | null | undefined) {
   if (!d) return false;
   return new Date(d) < new Date();
 }

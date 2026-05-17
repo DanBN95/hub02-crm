@@ -7,9 +7,25 @@ export interface WorkspaceSummary {
   slug: string;
 }
 
+export interface WorkspaceMemberSummary {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
 @Injectable()
 export class WorkspacesRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  async findMembers(workspaceId: string): Promise<WorkspaceMemberSummary[]> {
+    const members = await this.prisma.workspaceMember.findMany({
+      where: { workspaceId },
+      include: { user: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return members.map((m) => m.user);
+  }
 
   async findForUser(userId: string): Promise<WorkspaceSummary[]> {
     const members = await this.prisma.workspaceMember.findMany({

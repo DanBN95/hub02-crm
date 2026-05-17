@@ -1,24 +1,28 @@
 import { useMemo, useState } from 'react';
+import { useMembers } from '../../../lib/members.queries';
 import { useSprintsList } from '../../sprints/sprints.queries';
 import { useTasksList } from '../tasks.queries';
 import { CreateTaskSlideover } from './CreateTaskSlideover';
+import { TaskDetailPanel } from './TaskDetailPanel';
 import { TaskGroup } from './TaskGroup';
 
 const SPRINT_COLORS = [
-  'oklch(70% 0.18 25)',   // red
-  'oklch(70% 0.18 270)',  // indigo
-  'oklch(72% 0.16 150)',  // green
-  'oklch(75% 0.15 75)',   // amber
-  'oklch(70% 0.15 320)',  // pink
-  'oklch(70% 0.14 220)',  // cyan
+  'oklch(70% 0.18 25)',
+  'oklch(70% 0.18 270)',
+  'oklch(72% 0.16 150)',
+  'oklch(75% 0.15 75)',
+  'oklch(70% 0.15 320)',
+  'oklch(70% 0.14 220)',
 ];
 
 export function TasksView({ workspaceId }: { workspaceId: string }) {
   const { data: sprints = [], isLoading: sprintsLoading } = useSprintsList(workspaceId);
   const { data: tasksPage, isLoading: tasksLoading } = useTasksList(workspaceId, { limit: 100 });
+  const { data: members = [] } = useMembers(workspaceId);
   const tasks = tasksPage?.items ?? [];
 
   const [slideoverDefaults, setSlideoverDefaults] = useState<{ sprintId?: string } | null>(null);
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null);
 
   const groups = useMemo(() => {
     const bySprintId = new Map<string, typeof tasks>();
@@ -65,7 +69,9 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
                 color={SPRINT_COLORS[idx % SPRINT_COLORS.length] ?? 'oklch(70% 0.18 270)'}
                 tasks={groups.bySprintId.get(sprint.id) ?? []}
                 workspaceId={workspaceId}
+                members={members}
                 onAddTask={() => setSlideoverDefaults({ sprintId: sprint.id })}
+                onOpenDetail={setDetailTaskId}
                 defaultOpen={sprint.isActive}
               />
             ))}
@@ -75,7 +81,9 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
               color="oklch(60% 0 0)"
               tasks={groups.backlog}
               workspaceId={workspaceId}
+              members={members}
               onAddTask={() => setSlideoverDefaults({})}
+              onOpenDetail={setDetailTaskId}
               defaultOpen
             />
           </div>
@@ -87,6 +95,12 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
         open={slideoverDefaults !== null}
         onClose={() => setSlideoverDefaults(null)}
         defaultSprintId={slideoverDefaults?.sprintId}
+      />
+
+      <TaskDetailPanel
+        taskId={detailTaskId}
+        workspaceId={workspaceId}
+        onClose={() => setDetailTaskId(null)}
       />
     </div>
   );

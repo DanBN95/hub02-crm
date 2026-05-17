@@ -37,7 +37,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
   );
 }
 
-function formatDate(d: Date | null | undefined) {
+function formatDate(d: Date | string | null | undefined) {
   if (!d) return '—';
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(d));
 }
