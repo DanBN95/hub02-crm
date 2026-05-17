@@ -10,7 +10,6 @@ import {
 } from '../sprints.queries';
 import { CreateSprintModal } from './CreateSprintModal';
 
-const DEMO_WORKSPACE = import.meta.env['VITE_WORKSPACE_ID'] ?? 'demo';
 
 function toDateInputValue(d: Date | string | null | undefined): string {
   if (!d) return '';
@@ -238,8 +237,7 @@ function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
   );
 }
 
-export function SprintsTable() {
-  const workspaceId = DEMO_WORKSPACE;
+export function SprintsTable({ workspaceId }: { workspaceId: string }) {
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data: sprints = [], isLoading } = useSprintsList(workspaceId);

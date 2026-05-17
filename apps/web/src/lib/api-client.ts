@@ -9,8 +9,13 @@ export const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (res) => res,
   (err: unknown) => {
-    if (axios.isAxiosError(err) && err.response?.status === 401) {
-      window.location.href = '/api/auth/google';
+    if (
+      axios.isAxiosError(err) &&
+      err.response?.status === 401 &&
+      !err.config?.url?.includes('/auth/')
+    ) {
+      const apiBase = import.meta.env['VITE_API_URL'] ?? '';
+      window.location.href = `${apiBase}/auth/google`;
     }
     return Promise.reject(err);
   },

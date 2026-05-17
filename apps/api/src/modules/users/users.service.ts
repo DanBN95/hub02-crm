@@ -17,6 +17,10 @@ export class UsersService {
     return this.repo.findById(id);
   }
 
+  findByEmail(email: string): Promise<User | null> {
+    return this.repo.findByEmail(email);
+  }
+
   upsertByGoogle(args: UpsertUserArgs): Promise<User> {
     return this.repo.upsert({
       where: { email: args.email },

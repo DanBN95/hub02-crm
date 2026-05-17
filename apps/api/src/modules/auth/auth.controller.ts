@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  NotFoundException,
   Post,
   Req,
   Res,
@@ -9,6 +10,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { User } from '@prisma/client';
 import type { Request, Response } from 'express';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -17,6 +19,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
+    private readonly users: UsersService,
     private readonly config: ConfigService,
   ) {}
 
@@ -53,5 +56,24 @@ export class AuthController {
   logout(@Res() res: Response) {
     res.clearCookie('access_token');
     res.json({ ok: true });
+  }
+
+  /** Dev-only: sign in as the seeded demo user without Google OAuth. */
+  @Post('dev-login')
+  async devLogin(@Res() res: Response) {
+    if (process.env['NODE_ENV'] === 'production') {
+      res.status(403).json({ message: 'Not available in production' });
+      return;
+    }
+    const user = await this.users.findByEmail('demo@hub02.io');
+    if (!user) throw new NotFoundException('Demo user not found — run the seed first');
+    const token = this.auth.signToken(user);
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    res.json({ ok: true, userId: user.id });
   }
 }

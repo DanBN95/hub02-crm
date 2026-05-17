@@ -4,8 +4,6 @@ import { useTasksList } from '../tasks.queries';
 import { CreateTaskSlideover } from './CreateTaskSlideover';
 import { TaskGroup } from './TaskGroup';
 
-const DEMO_WORKSPACE = import.meta.env['VITE_WORKSPACE_ID'] ?? 'demo';
-
 const SPRINT_COLORS = [
   'oklch(70% 0.18 25)',   // red
   'oklch(70% 0.18 270)',  // indigo
@@ -15,8 +13,7 @@ const SPRINT_COLORS = [
   'oklch(70% 0.14 220)',  // cyan
 ];
 
-export function TasksView() {
-  const workspaceId = DEMO_WORKSPACE;
+export function TasksView({ workspaceId }: { workspaceId: string }) {
   const { data: sprints = [], isLoading: sprintsLoading } = useSprintsList(workspaceId);
   const { data: tasksPage, isLoading: tasksLoading } = useTasksList(workspaceId, { limit: 100 });
   const tasks = tasksPage?.items ?? [];
