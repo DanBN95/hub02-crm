@@ -11,9 +11,25 @@ async function bootstrap() {
   app.useLogger(app.get(Logger));
 
   const config = app.get(ConfigService);
-  const origin = config.get<string>('WEB_ORIGIN', 'http://localhost:5173');
+  const allowedOrigins = (config.get<string>('WEB_ORIGIN', 'http://localhost:5173'))
+    .split(',')
+    .map((o) => o.trim());
 
-  app.enableCors({ origin, credentials: true });
+  app.enableCors({
+    origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (
+        !requestOrigin ||
+        allowedOrigins.includes(requestOrigin) ||
+        requestOrigin.endsWith('.vercel.app') ||
+        requestOrigin.startsWith('http://localhost:')
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${requestOrigin} not allowed`));
+      }
+    },
+    credentials: true,
+  });
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
