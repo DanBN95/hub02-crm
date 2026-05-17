@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nest build",
     "start": "node dist/main",
+    "start:prod": "prisma migrate deploy && ts-node prisma/seed.ts && node dist/main",
     "start:dev": "nest start --watch",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'lint: ESLint config pending (Sprint 1)'",
@@ -24,6 +25,8 @@
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "@prisma/client": "^6.2.0",
+    "prisma": "^6.2.0",
+    "ts-node": "^10.9.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
@@ -46,10 +49,8 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
     "jest": "^29.7.0",
-    "prisma": "^6.2.0",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
-    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }
 }
