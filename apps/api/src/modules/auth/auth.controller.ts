@@ -58,10 +58,14 @@ export class AuthController {
     res.json({ ok: true });
   }
 
-  /** Dev-only: sign in as the seeded demo user without Google OAuth. */
+  /** Dev/staging-only: sign in as the seeded demo user without Google OAuth.
+   *  Enabled when NODE_ENV !== 'production' OR ALLOW_DEV_LOGIN=true. */
   @Post('dev-login')
   async devLogin(@Res() res: Response) {
-    if (process.env['NODE_ENV'] === 'production') {
+    const allowed =
+      process.env['NODE_ENV'] !== 'production' ||
+      process.env['ALLOW_DEV_LOGIN'] === 'true';
+    if (!allowed) {
       res.status(403).json({ message: 'Not available in production' });
       return;
     }
