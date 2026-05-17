@@ -5,7 +5,7 @@
   "scripts": {
     "build": "nest build",
     "start": "node dist/main",
-    "start:prod": "prisma migrate deploy && ts-node prisma/seed.ts && node dist/main",
+    "start:prod": "prisma db push && ts-node prisma/seed.ts && node dist/main",
     "start:dev": "nest start --watch",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'lint: ESLint config pending (Sprint 1)'",
