@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { useMembers } from '../../../lib/members.queries';
 import { useSprintsList } from '../../sprints/sprints.queries';
 import { useTasksList } from '../tasks.queries';
+import { useTaskFilters } from '../useTaskFilters';
 import { CreateTaskSlideover } from './CreateTaskSlideover';
 import { TaskDetailPanel } from './TaskDetailPanel';
+import { TaskFilterBar } from './TaskFilterBar';
 import { TaskGroup } from './TaskGroup';
 
 const SPRINT_COLORS = [
@@ -15,14 +17,28 @@ const SPRINT_COLORS = [
   'oklch(70% 0.14 220)',
 ];
 
-export function TasksView({ workspaceId }: { workspaceId: string }) {
+interface Props {
+  workspaceId: string;
+  externalDetailTaskId?: string | null;
+  onExternalDetailClose?: () => void;
+}
+
+export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailClose }: Props) {
+  const [filters, setFilters, clearFilters] = useTaskFilters();
   const { data: sprints = [], isLoading: sprintsLoading } = useSprintsList(workspaceId);
-  const { data: tasksPage, isLoading: tasksLoading } = useTasksList(workspaceId, { limit: 100 });
+  const { data: tasksPage, isLoading: tasksLoading } = useTasksList(workspaceId, { limit: 200, ...filters });
   const { data: members = [] } = useMembers(workspaceId);
   const tasks = tasksPage?.items ?? [];
 
   const [slideoverDefaults, setSlideoverDefaults] = useState<{ sprintId?: string } | null>(null);
-  const [detailTaskId, setDetailTaskId] = useState<string | null>(null);
+  const [internalDetailTaskId, setInternalDetailTaskId] = useState<string | null>(null);
+
+  // External selection (from command palette) takes priority
+  const detailTaskId = externalDetailTaskId ?? internalDetailTaskId;
+  function closeDetail() {
+    setInternalDetailTaskId(null);
+    onExternalDetailClose?.();
+  }
 
   const groups = useMemo(() => {
     const bySprintId = new Map<string, typeof tasks>();
@@ -43,13 +59,21 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="shrink-0 px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
-        <div>
-          <h1 className="text-[20px] font-semibold text-[var(--color-fg)] tracking-tight">Tasks</h1>
-          <p className="text-[12px] text-[var(--color-fg-muted)] mt-0.5">
-            {tasks.length} tasks across {sprints.length} {sprints.length === 1 ? 'sprint' : 'sprints'}
-          </p>
+      <header className="shrink-0 px-6 py-4 border-b border-[var(--color-border)]">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-[20px] font-semibold text-[var(--color-fg)] tracking-tight">Tasks</h1>
+            <p className="text-[12px] text-[var(--color-fg-muted)] mt-0.5">
+              {tasks.length} tasks across {sprints.length} {sprints.length === 1 ? 'sprint' : 'sprints'}
+            </p>
+          </div>
         </div>
+        <TaskFilterBar
+          filters={filters}
+          members={members}
+          onFilter={setFilters}
+          onClear={clearFilters}
+        />
       </header>
 
       <div className="flex-1 overflow-auto px-6 py-5">
@@ -60,7 +84,7 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
             ))}
           </div>
         ) : (
-          <div className="space-y-4 max-w-[1200px]">
+          <div className="space-y-8 max-w-[1200px]">
             {sprints.map((sprint, idx) => (
               <TaskGroup
                 key={sprint.id}
@@ -71,7 +95,7 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
                 workspaceId={workspaceId}
                 members={members}
                 onAddTask={() => setSlideoverDefaults({ sprintId: sprint.id })}
-                onOpenDetail={setDetailTaskId}
+                onOpenDetail={setInternalDetailTaskId}
                 defaultOpen={sprint.isActive}
               />
             ))}
@@ -83,7 +107,7 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
               workspaceId={workspaceId}
               members={members}
               onAddTask={() => setSlideoverDefaults({})}
-              onOpenDetail={setDetailTaskId}
+              onOpenDetail={setInternalDetailTaskId}
               defaultOpen
             />
           </div>
@@ -100,7 +124,7 @@ export function TasksView({ workspaceId }: { workspaceId: string }) {
       <TaskDetailPanel
         taskId={detailTaskId}
         workspaceId={workspaceId}
-        onClose={() => setDetailTaskId(null)}
+        onClose={closeDetail}
       />
     </div>
   );

@@ -27,6 +27,22 @@ export class WorkspacesRepository {
     return members.map((m) => m.user);
   }
 
+  async findFirst(): Promise<{ id: string } | null> {
+    return this.prisma.workspace.findFirst({ select: { id: true }, orderBy: { createdAt: 'asc' } });
+  }
+
+  async addMember(workspaceId: string, userId: string, role = 'member'): Promise<void> {
+    await this.prisma.workspaceMember.upsert({
+      where: { workspaceId_userId: { workspaceId, userId } },
+      update: {},
+      create: { workspaceId, userId, role },
+    });
+  }
+
+  async memberCount(userId: string): Promise<number> {
+    return this.prisma.workspaceMember.count({ where: { userId } });
+  }
+
   async findForUser(userId: string): Promise<WorkspaceSummary[]> {
     const members = await this.prisma.workspaceMember.findMany({
       where: { userId },

@@ -1,13 +1,18 @@
 import { useState } from 'react';
+import { CommandPalette } from './components/CommandPalette';
 import { Sidebar, type NavKey } from './components/layout/Sidebar';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
+import { LoginPage } from './features/auth/LoginPage';
 import { DocumentsView } from './features/documents/components/DocumentsView';
 import { SprintsTable } from './features/sprints/components/SprintsTable';
 import { TasksView } from './features/tasks/components/TasksView';
+import { useCommandPalette } from './hooks/useCommandPalette';
 
 function AppShell() {
   const [nav, setNav] = useState<NavKey>('tasks');
-  const { workspace, loading, error } = useWorkspace();
+  const [detailTaskId, setDetailTaskId] = useState<string | null>(null);
+  const { workspace, loading } = useWorkspace();
+  const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
 
   if (loading) {
     return (
@@ -17,24 +22,37 @@ function AppShell() {
     );
   }
 
-  if (error || !workspace) {
-    return (
-      <div className="h-screen w-screen bg-[var(--color-bg)] flex items-center justify-center">
-        <span className="text-[13px] text-[var(--color-danger)]">
-          {error ?? 'Could not connect to workspace'}
-        </span>
-      </div>
-    );
+  if (!workspace) {
+    return <LoginPage />;
+  }
+
+  function handleOpenTask(taskId: string) {
+    setNav('tasks');
+    setDetailTaskId(taskId);
   }
 
   return (
     <div className="h-screen w-screen bg-[var(--color-bg)] text-[var(--color-fg)] flex overflow-hidden">
       <Sidebar active={nav} onSelect={setNav} />
       <main className="flex-1 min-w-0 overflow-hidden">
-        {nav === 'tasks' && <TasksView workspaceId={workspace.id} />}
+        {nav === 'tasks' && (
+          <TasksView
+            workspaceId={workspace.id}
+            externalDetailTaskId={detailTaskId}
+            onExternalDetailClose={() => setDetailTaskId(null)}
+          />
+        )}
         {nav === 'sprints' && <SprintsTable workspaceId={workspace.id} />}
         {nav === 'documents' && <DocumentsView />}
       </main>
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        workspaceId={workspace.id}
+        onOpenTask={handleOpenTask}
+        onNavigate={setNav}
+      />
     </div>
   );
 }
