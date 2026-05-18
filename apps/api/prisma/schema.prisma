@@ -45,9 +45,10 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members  WorkspaceMember[]
-  sprints  Sprint[]
-  tasks    Task[]
+  members     WorkspaceMember[]
+  sprints     Sprint[]
+  tasks       Task[]
+  invitations WorkspaceInvitation[]
 }
 
 model WorkspaceMember {
@@ -110,6 +111,22 @@ model Task {
   @@index([assigneeId])
   @@index([status])
   @@index([priority])
+}
+
+model WorkspaceInvitation {
+  id          String    @id @default(cuid())
+  workspaceId String
+  email       String
+  token       String    @unique @default(cuid())
+  role        String    @default("member")
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([token])
 }
 
 model Comment {

@@ -1,14 +1,28 @@
 import type { ReactNode } from 'react';
 
-export type NavKey = 'tasks' | 'sprints' | 'documents';
+export type NavKey = 'home' | 'tasks' | 'sprints' | 'documents' | 'settings';
 
 interface NavItem {
   key: NavKey;
   label: string;
   icon: ReactNode;
+  bottom?: boolean;
 }
 
 const ITEMS: NavItem[] = [
+  {
+    key: 'home',
+    label: 'Home',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path
+          d="M2 6.5L8 2l6 4.5V14a1 1 0 01-1 1H3a1 1 0 01-1-1V6.5z"
+          stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none"
+        />
+        <path d="M6 15v-5h4v5" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="none" />
+      </svg>
+    ),
+  },
   {
     key: 'tasks',
     label: 'Tasks',
@@ -51,6 +65,20 @@ const ITEMS: NavItem[] = [
       </svg>
     ),
   },
+  {
+    key: 'settings',
+    label: 'Settings',
+    bottom: true,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <path
+          d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06M12.95 12.95l-1.06-1.06M4.11 4.11L3.05 3.05"
+          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
 ];
 
 interface Props {
@@ -71,8 +99,8 @@ export function Sidebar({ active, onSelect }: Props) {
         </div>
       </div>
 
-      <nav className="flex flex-col p-2 gap-0.5">
-        {ITEMS.map((item) => {
+      <nav className="flex flex-col p-2 gap-0.5 flex-1">
+        {ITEMS.filter((i) => !i.bottom).map((item) => {
           const isActive = item.key === active;
           return (
             <button
@@ -92,9 +120,27 @@ export function Sidebar({ active, onSelect }: Props) {
         })}
       </nav>
 
-      <div className="mt-auto p-3 border-t border-[var(--color-border)]">
-        <p className="text-[11px] text-[var(--color-fg-subtle)] leading-snug">
-          v0.3 · Sprint 2
+      <div className="p-2 border-t border-[var(--color-border)]">
+        {ITEMS.filter((i) => i.bottom).map((item) => {
+          const isActive = item.key === active;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onSelect(item.key)}
+              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-md)] text-[13px] font-medium text-left transition-colors ${
+                isActive
+                  ? 'bg-[var(--color-surface-2)] text-[var(--color-fg)]'
+                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-surface-2)]'
+              }`}
+            >
+              <span className={isActive ? 'text-[var(--color-accent)]' : ''}>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+        <p className="text-[11px] text-[var(--color-fg-subtle)] leading-snug px-2.5 pt-2">
+          v0.3 · Sprint 3
         </p>
       </div>
     </aside>
