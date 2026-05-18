@@ -103,6 +103,7 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
             <TaskGroup
               title="Backlog"
               color="oklch(60% 0 0)"
+              extraTopGap
               tasks={groups.backlog}
               workspaceId={workspaceId}
               members={members}

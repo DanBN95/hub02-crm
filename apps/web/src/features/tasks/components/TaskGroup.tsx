@@ -84,6 +84,7 @@ interface Props {
   onAddTask: () => void;
   onOpenDetail: (taskId: string) => void;
   defaultOpen?: boolean;
+  extraTopGap?: boolean;
 }
 
 export function TaskGroup({
@@ -96,11 +97,12 @@ export function TaskGroup({
   onAddTask,
   onOpenDetail,
   defaultOpen = true,
+  extraTopGap = false,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)]">
+    <div className={`rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)]${extraTopGap ? ' mt-8' : ''}`}>
       {/* Group header — colored left stripe replaced with tinted bg strip */}
       <div
         className="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none"

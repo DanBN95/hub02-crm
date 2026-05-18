@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls -la /Users/danbennatan/.claude/projects/-Users-danbennatan-Desktop-Projects-hub02-crm/memory/ 2>/dev/null && echo \\\"---\\\" && cat /Users/danbennatan/.claude/projects/-Users-danbennatan-D...",
+  "error": "Exit code 1\ntotal 0\ndrwxr-xr-x@ 2 danbennatan  staff   64 May 18 23:06 .\ndrwxr-xr-x@ 5 danbennatan  staff  160 May 18 23:06 ..\n---",
+  "timestamp": "2026-05-18T20:06:42.053Z",
+  "retry_count": 1
+}

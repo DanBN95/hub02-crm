@@ -24,10 +24,13 @@ export function StatusCell({ taskId, status, workspaceId, readonly }: Props) {
   const update = useUpdateTask(workspaceId);
   const current = STATUS_MAP[status] ?? STATUSES[0]!;
 
+  // Fixed width sized to the widest label ("In Progress") so all badges align
+  const badgeBase = 'inline-flex items-center justify-center gap-1.5 w-[90px] py-0.5 rounded-full text-[11px] font-medium';
+
   if (readonly) {
     return (
       <span
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium"
+        className={badgeBase}
         style={{ background: current.bg, color: current.color }}
       >
         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: current.color }} />
@@ -39,14 +42,13 @@ export function StatusCell({ taskId, status, workspaceId, readonly }: Props) {
   return (
     <Popover>
       <PopoverTrigger
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium
-                   hover:brightness-110 transition-all duration-100
-                   focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none"
+        className={`${badgeBase} hover:brightness-110 transition-all duration-100
+                   focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:outline-none`}
         style={{ background: current.bg, color: current.color }}
       >
         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: current.color }} />
         {current.label}
-        <svg width="8" height="8" viewBox="0 0 8 8" className="opacity-50 ml-0.5 shrink-0">
+        <svg width="8" height="8" viewBox="0 0 8 8" className="opacity-50 shrink-0">
           <path d="M1.5 3L4 5.5 6.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" fill="none" />
         </svg>
       </PopoverTrigger>
