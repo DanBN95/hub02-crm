@@ -26,12 +26,32 @@ function renderContent(text: string) {
   const parts = text.split(/(@\w[\w\s]*?\b)/g);
   return parts.map((part, i) =>
     part.startsWith('@') ? (
-      <span key={i} style={{ color: 'var(--color-accent)' }}>
-        {part}
-      </span>
+      <span key={i} style={{ color: 'var(--color-accent)' }}>{part}</span>
     ) : (
       part
     ),
+  );
+}
+
+// ── Section divider ────────────────────────────────────────────────────────
+function Divider() {
+  return <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '0 0' }} />;
+}
+
+// ── Property row: label on left, value on right, bg revealed on hover ─────
+function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div
+      className="flex items-center gap-4 px-4 py-2.5 -mx-1 rounded-[var(--radius-md)] cursor-default
+                 transition-colors duration-100"
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
+    >
+      <span className="text-[11px] text-[var(--color-fg-subtle)] w-[72px] shrink-0 select-none">
+        {label}
+      </span>
+      <div className="flex-1">{children}</div>
+    </div>
   );
 }
 
@@ -47,7 +67,7 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
   const { data: comments = [], isLoading: commentsLoading } = useComments(task.id);
   const createComment = useCreateComment(task.id);
   const deleteComment = useDeleteComment(task.id);
-  const { workspace } = useWorkspace();
+  const { user } = useWorkspace();
 
   const [titleEditing, setTitleEditing] = useState(false);
   const [titleDraft, setTitleDraft] = useState(task.title);
@@ -56,15 +76,11 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
 
-  // Sync if task changes externally
   useEffect(() => { setTitleDraft(task.title); }, [task.title]);
   useEffect(() => { setDescription(task.description ?? ''); }, [task.description]);
 
-  // Scroll feed to bottom on new comment
   useEffect(() => {
-    if (feedRef.current) {
-      feedRef.current.scrollTop = feedRef.current.scrollHeight;
-    }
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
   }, [comments.length]);
 
   const saveTitle = () => {
@@ -75,9 +91,8 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
   };
 
   const saveDescription = () => {
-    if (description !== (task.description ?? '')) {
+    if (description !== (task.description ?? ''))
       update.mutate({ id: task.id, dto: { description: description || undefined } });
-    }
   };
 
   const submitComment = () => {
@@ -87,10 +102,10 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
     createComment.mutate(content);
   };
 
-  // Current user (first member matching workspace member — simple heuristic for now)
-  const currentUser = members[0] ?? { id: '', name: 'You', avatarUrl: null };
+  const currentUser = user
+    ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl }
+    : (members[0] ?? { id: '', name: 'You', avatarUrl: null });
 
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
@@ -103,31 +118,40 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/20"
+        className="fixed inset-0 z-40"
+        style={{ background: 'oklch(0% 0 0 / 0.4)' }}
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Panel */}
+      {/* Panel — glass surface */}
       <div
         role="dialog"
         aria-label={`Task: ${task.title}`}
-        className="fixed inset-y-0 right-0 z-50 w-[480px] max-w-full
-                   bg-[var(--color-surface)] border-l border-[var(--color-border)]
-                   shadow-[-8px_0_32px_oklch(0%_0_0/0.35)]
-                   flex flex-col overflow-hidden"
-        style={{ animation: 'slideInRight 200ms ease-out' }}
+        className="fixed inset-y-0 right-0 z-50 w-[500px] max-w-full flex flex-col overflow-hidden"
+        style={{
+          background: 'color-mix(in oklch, var(--color-surface) 88%, transparent)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderLeft: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '-12px 0 48px oklch(0% 0 0 / 0.4)',
+          animation: 'slideInRight 220ms cubic-bezier(0.32, 0.72, 0, 1)',
+        }}
       >
-        {/* Header */}
-        <header className="shrink-0 flex items-center gap-2 px-5 py-3 border-b border-[var(--color-border)]">
-          <span className="text-[10px] font-mono font-medium px-1.5 py-0.5
-                           bg-[var(--color-surface-2)] text-[var(--color-fg-subtle)]
-                           rounded-[var(--radius-md)] shrink-0 select-all">
+        {/* ── Header ─────────────────────────────────────────────────────── */}
+        <header
+          className="shrink-0 flex items-center gap-2.5 px-5 py-4"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded
+                           bg-[var(--color-surface-2)] text-[var(--color-fg-subtle)] shrink-0 select-all">
             HUB-{shortId}
           </span>
           {task.sprint && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full shrink-0"
-                  style={{ background: 'oklch(65% 0.18 270 / 0.12)', color: 'var(--color-accent)' }}>
+            <span
+              className="text-[11px] px-2 py-0.5 rounded-full shrink-0 font-medium"
+              style={{ background: 'oklch(65% 0.18 270 / 0.12)', color: 'var(--color-accent)' }}
+            >
               {task.sprint.name}
             </span>
           )}
@@ -135,7 +159,7 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
           <button
             onClick={onClose}
             className="p-1.5 rounded-[var(--radius-md)] text-[var(--color-fg-subtle)]
-                       hover:text-[var(--color-fg)] hover:bg-[var(--color-surface-2)]
+                       hover:text-[var(--color-fg)] hover:bg-[rgba(255,255,255,0.06)]
                        transition-colors outline-none
                        focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             aria-label="Close task"
@@ -146,10 +170,11 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
           </button>
         </header>
 
-        {/* Scrollable body */}
+        {/* ── Scrollable body ─────────────────────────────────────────────── */}
         <div className="flex-1 flex flex-col overflow-hidden">
+
           {/* Title */}
-          <div className="px-5 pt-4 pb-3">
+          <div className="px-5 pt-6 pb-5">
             {titleEditing ? (
               <textarea
                 autoFocus
@@ -161,62 +186,50 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
                   if (e.key === 'Escape') { setTitleDraft(task.title); setTitleEditing(false); }
                 }}
                 rows={2}
-                className="w-full text-[16px] font-semibold text-[var(--color-fg)] leading-snug
-                           bg-[var(--color-surface-2)] rounded-[var(--radius-md)]
-                           border border-[var(--color-accent)] outline-none resize-none
-                           px-2 py-1"
+                className="w-full text-[17px] font-semibold text-[var(--color-fg)] leading-snug
+                           rounded-[var(--radius-md)] border outline-none resize-none px-2 py-1"
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  borderColor: 'var(--color-accent)',
+                }}
               />
             ) : (
               <h1
                 onClick={() => setTitleEditing(true)}
-                className="text-[16px] font-semibold text-[var(--color-fg)] leading-snug
-                           cursor-text hover:bg-[var(--color-surface-2)] px-2 py-1 -mx-2
-                           rounded-[var(--radius-md)] transition-colors"
+                className="text-[17px] font-semibold text-[var(--color-fg)] leading-snug
+                           cursor-text px-2 py-1 -mx-2 rounded-[var(--radius-md)]
+                           transition-colors duration-100"
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
               >
                 {task.title}
               </h1>
             )}
           </div>
 
-          {/* Properties */}
-          <div className="px-5 pb-4 grid grid-cols-2 gap-x-4 gap-y-3">
-            {[
-              {
-                label: 'Status',
-                node: <StatusCell taskId={task.id} status={task.status as any} workspaceId={workspaceId} />,
-              },
-              {
-                label: 'Priority',
-                node: <PriorityCell taskId={task.id} priority={task.priority as any} workspaceId={workspaceId} />,
-              },
-              {
-                label: 'Owner',
-                node: (
-                  <OwnerCell
-                    taskId={task.id}
-                    assignee={task.assignee}
-                    members={members}
-                    workspaceId={workspaceId}
-                  />
-                ),
-              },
-              {
-                label: 'Due date',
-                node: <DueDateCell taskId={task.id} dueAt={task.dueAt} workspaceId={workspaceId} />,
-              },
-            ].map(({ label, node }) => (
-              <div key={label} className="flex flex-col gap-1">
-                <span className="text-[10px] font-medium text-[var(--color-fg-subtle)] uppercase tracking-wide">
-                  {label}
-                </span>
-                {node}
-              </div>
-            ))}
+          <Divider />
+
+          {/* Properties — hover-reveal containers */}
+          <div className="px-5 py-5 flex flex-col gap-1">
+            <PropertyRow label="Status">
+              <StatusCell taskId={task.id} status={task.status as any} workspaceId={workspaceId} />
+            </PropertyRow>
+            <PropertyRow label="Priority">
+              <PriorityCell taskId={task.id} priority={task.priority as any} workspaceId={workspaceId} />
+            </PropertyRow>
+            <PropertyRow label="Owner">
+              <OwnerCell taskId={task.id} assignee={task.assignee} members={members} workspaceId={workspaceId} />
+            </PropertyRow>
+            <PropertyRow label="Due date">
+              <DueDateCell taskId={task.id} dueAt={task.dueAt} workspaceId={workspaceId} />
+            </PropertyRow>
           </div>
 
+          <Divider />
+
           {/* Description */}
-          <div className="px-5 pb-5 border-b border-[var(--color-border)]">
-            <span className="text-[10px] font-medium text-[var(--color-fg-subtle)] uppercase tracking-wide block mb-1.5">
+          <div className="px-5 py-5">
+            <span className="block text-[10px] font-semibold text-[var(--color-fg-subtle)] uppercase tracking-wider mb-3">
               Description
             </span>
             <textarea
@@ -225,34 +238,38 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
               onBlur={saveDescription}
               placeholder="Add a description…"
               rows={3}
-              className="w-full bg-transparent text-[13px] text-[var(--color-fg)]
-                         placeholder:text-[var(--color-fg-subtle)] leading-relaxed
-                         resize-none outline-none
-                         hover:bg-[var(--color-surface-2)] focus:bg-[var(--color-surface-2)]
-                         px-2 py-1.5 -mx-2 rounded-[var(--radius-md)]
+              className="w-full text-[13px] text-[var(--color-fg)] leading-relaxed
+                         placeholder:text-[var(--color-fg-subtle)]
+                         resize-none outline-none px-3 py-2.5 -mx-3 rounded-[var(--radius-md)]
                          transition-colors duration-100"
+              onFocus={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+              onBlurCapture={(e) => { (e.currentTarget as HTMLElement).style.background = ''; saveDescription(); }}
+              onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+              onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) (e.currentTarget as HTMLElement).style.background = ''; }}
             />
           </div>
 
+          <Divider />
+
           {/* Updates header */}
-          <div className="shrink-0 px-5 py-3 flex items-center gap-3">
-            <span className="text-[11px] font-semibold text-[var(--color-fg-subtle)] uppercase tracking-wide">
+          <div className="shrink-0 px-5 pt-5 pb-3 flex items-center gap-3">
+            <span className="text-[10px] font-semibold text-[var(--color-fg-subtle)] uppercase tracking-wider">
               Updates
             </span>
-            <div className="flex-1 h-px bg-[var(--color-border)]" />
+            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
             {comments.length > 0 && (
               <span className="text-[11px] text-[var(--color-fg-subtle)]">{comments.length}</span>
             )}
           </div>
 
           {/* Feed */}
-          <div ref={feedRef} className="flex-1 overflow-y-auto px-5 pb-2 space-y-4" aria-live="polite">
+          <div ref={feedRef} className="flex-1 overflow-y-auto px-5 pb-4 space-y-5" aria-live="polite">
             {commentsLoading && (
-              <div className="space-y-3 py-2">
+              <div className="space-y-4 py-2">
                 {[1, 2].map((i) => (
-                  <div key={i} className="flex gap-2.5 animate-pulse">
-                    <div className="w-6 h-6 rounded-full bg-[var(--color-surface-2)] shrink-0" />
-                    <div className="flex-1 space-y-1.5">
+                  <div key={i} className="flex gap-3 animate-pulse">
+                    <div className="w-7 h-7 rounded-full bg-[var(--color-surface-2)] shrink-0" />
+                    <div className="flex-1 space-y-2">
                       <div className="h-2.5 w-24 bg-[var(--color-surface-2)] rounded" />
                       <div className="h-2.5 w-full bg-[var(--color-surface-2)] rounded" />
                     </div>
@@ -261,28 +278,28 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
               </div>
             )}
             {!commentsLoading && comments.length === 0 && (
-              <p className="text-[12px] text-[var(--color-fg-subtle)] text-center py-6">
+              <p className="text-[12px] text-[var(--color-fg-subtle)] text-center py-8">
                 No updates yet. Be the first to add one.
               </p>
             )}
             {comments.map((c) => (
-              <div key={c.id} className="flex gap-2.5 group">
-                <Avatar name={c.user.name} avatarUrl={c.user.avatarUrl} size={24} className="mt-0.5" />
+              <div key={c.id} className="flex gap-3 group/comment">
+                <Avatar name={c.user.name} avatarUrl={c.user.avatarUrl} size={28} className="mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-0.5">
+                  <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-[12px] font-semibold text-[var(--color-fg)]">{c.user.name}</span>
                     <span className="text-[11px] text-[var(--color-fg-subtle)]">{relativeTime(c.createdAt)}</span>
                     <button
                       onClick={() => deleteComment.mutate(c.id)}
-                      className="ml-auto opacity-0 group-hover:opacity-100 text-[11px]
+                      className="ml-auto opacity-0 group-hover/comment:opacity-100 text-[11px]
                                  text-[var(--color-fg-subtle)] hover:text-[var(--color-danger)]
-                                 transition-all outline-none"
+                                 transition-opacity duration-100 outline-none"
                       aria-label="Delete comment"
                     >
                       ✕
                     </button>
                   </div>
-                  <p className="text-[13px] text-[var(--color-fg-muted)] leading-snug whitespace-pre-wrap break-words">
+                  <p className="text-[13px] text-[var(--color-fg-muted)] leading-relaxed whitespace-pre-wrap break-words">
                     {renderContent(c.content)}
                   </p>
                 </div>
@@ -291,12 +308,19 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
           </div>
 
           {/* Composer */}
-          <div className="shrink-0 border-t border-[var(--color-border)] px-5 py-3">
-            <div className="flex gap-2.5 items-end">
-              <Avatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={24} className="mb-1 shrink-0" />
-              <div className="flex-1 bg-[var(--color-surface-2)] rounded-[var(--radius-md)]
-                              border border-[var(--color-border)] focus-within:border-[var(--color-accent)]
-                              transition-colors overflow-hidden">
+          <div
+            className="shrink-0 px-5 py-4"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <div className="flex gap-3 items-end">
+              <Avatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={28} className="mb-1 shrink-0" />
+              <div
+                className="flex-1 rounded-[var(--radius-md)] overflow-hidden
+                           transition-colors duration-100"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                onFocusCapture={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)'; }}
+                onBlurCapture={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
+              >
                 <textarea
                   ref={composerRef}
                   value={draft}
@@ -308,10 +332,10 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
                   rows={1}
                   className="w-full bg-transparent text-[13px] text-[var(--color-fg)]
                              placeholder:text-[var(--color-fg-subtle)]
-                             px-3 py-2 outline-none resize-none leading-snug"
-                  style={{ minHeight: '36px', maxHeight: '120px' }}
+                             px-3 py-2.5 outline-none resize-none leading-snug"
+                  style={{ minHeight: '38px', maxHeight: '120px' }}
                 />
-                <div className="flex justify-between items-center px-2 pb-2">
+                <div className="flex justify-between items-center px-3 pb-2.5">
                   <span className="text-[10px] text-[var(--color-fg-subtle)]">⌘+Enter to post</span>
                   <button
                     onClick={submitComment}
