@@ -1,5 +1,12 @@
+import CloseIcon from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import Skeleton from '@mui/material/Skeleton';
+import Typography from '@mui/material/Typography';
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Avatar } from '../../../components/ui/Avatar';
 import { useWorkspace } from '../../../context/WorkspaceContext';
 import { useMembers } from '../../../lib/members.queries';
@@ -33,35 +40,46 @@ function renderContent(text: string) {
   );
 }
 
-// ── Section divider ────────────────────────────────────────────────────────
-function Divider() {
-  return <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '0 0' }} />;
-}
-
 // ── Property row: label on left, value on right, bg revealed on hover ─────
 function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div
-      className="flex items-center gap-4 px-4 py-2.5 -mx-1 rounded-[var(--radius-md)] cursor-default
-                 transition-colors duration-100"
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        px: 1,
+        py: 1,
+        mx: -1,
+        borderRadius: 1,
+        cursor: 'default',
+        transition: 'background 100ms',
+        '&:hover': { background: 'rgba(255,255,255,0.04)' },
+      }}
     >
-      <span className="text-[11px] text-[var(--color-fg-subtle)] w-[72px] shrink-0 select-none">
+      <Typography
+        sx={{
+          fontSize: 11,
+          color: 'text.disabled',
+          width: 72,
+          flexShrink: 0,
+          userSelect: 'none',
+        }}
+      >
         {label}
-      </span>
-      <div className="flex-1">{children}</div>
-    </div>
+      </Typography>
+      <Box sx={{ flex: 1 }}>{children}</Box>
+    </Box>
   );
 }
 
-interface PanelProps {
+interface PanelContentProps {
   task: TaskWithRelations;
   workspaceId: string;
   onClose: () => void;
 }
 
-function Panel({ task, workspaceId, onClose }: PanelProps) {
+function PanelContent({ task, workspaceId, onClose }: PanelContentProps) {
   const update = useUpdateTask(workspaceId);
   const { data: members = [] } = useMembers(workspaceId);
   const { data: comments = [], isLoading: commentsLoading } = useComments(task.id);
@@ -106,263 +124,355 @@ function Panel({ task, workspaceId, onClose }: PanelProps) {
     ? { id: user.id, name: user.name, avatarUrl: user.avatarUrl }
     : (members[0] ?? { id: '', name: 'You', avatarUrl: null });
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
-
   const shortId = task.id.slice(-6).toUpperCase();
 
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40"
-        style={{ background: 'oklch(0% 0 0 / 0.4)' }}
-        onClick={onClose}
-        aria-hidden="true"
-      />
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
-      {/* Panel — glass surface */}
-      <div
-        role="dialog"
-        aria-label={`Task: ${task.title}`}
-        className="fixed inset-y-0 right-0 z-50 w-[500px] max-w-full flex flex-col overflow-hidden"
-        style={{
-          background: 'color-mix(in oklch, var(--color-surface) 88%, transparent)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderLeft: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '-12px 0 48px oklch(0% 0 0 / 0.4)',
-          animation: 'slideInRight 220ms cubic-bezier(0.32, 0.72, 0, 1)',
+      {/* ── Header ───────────────────────────────────────────────────────── */}
+      <Box
+        sx={{
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 2.5,
+          py: 2,
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
       >
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <header
-          className="shrink-0 flex items-center gap-2.5 px-5 py-4"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        {/* ID badge */}
+        <Typography
+          component="span"
+          sx={{
+            fontSize: 10,
+            fontFamily: 'monospace',
+            fontWeight: 500,
+            px: 1,
+            py: 0.5,
+            borderRadius: 0.75,
+            background: 'rgba(255,255,255,0.06)',
+            color: 'text.disabled',
+            flexShrink: 0,
+            userSelect: 'all',
+            letterSpacing: '0.04em',
+          }}
         >
-          <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded
-                           bg-[var(--color-surface-2)] text-[var(--color-fg-subtle)] shrink-0 select-all">
-            HUB-{shortId}
-          </span>
-          {task.sprint && (
-            <span
-              className="text-[11px] px-2 py-0.5 rounded-full shrink-0 font-medium"
-              style={{ background: 'oklch(65% 0.18 270 / 0.12)', color: 'var(--color-accent)' }}
+          HUB-{shortId}
+        </Typography>
+
+        {/* Sprint chip */}
+        {task.sprint && (
+          <Chip
+            label={task.sprint.name}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: 10,
+              fontWeight: 500,
+              background: 'oklch(65% 0.18 270 / 0.12)',
+              color: 'var(--color-accent)',
+              border: '1px solid oklch(65% 0.18 270 / 0.2)',
+            }}
+          />
+        )}
+
+        <Box sx={{ flex: 1 }} />
+
+        {/* Close */}
+        <IconButton
+          size="small"
+          onClick={onClose}
+          aria-label="Close task"
+          sx={{
+            color: 'text.disabled',
+            '&:hover': { color: 'text.primary', background: 'rgba(255,255,255,0.06)' },
+          }}
+        >
+          <CloseIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      </Box>
+
+      {/* ── Scrollable body ───────────────────────────────────────────────── */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Title */}
+        <Box sx={{ px: 2.5, pt: 3, pb: 2.5 }}>
+          {titleEditing ? (
+            <textarea
+              autoFocus
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onBlur={saveTitle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); saveTitle(); }
+                if (e.key === 'Escape') { setTitleDraft(task.title); setTitleEditing(false); }
+              }}
+              rows={2}
+              style={{
+                width: '100%',
+                fontSize: 17,
+                fontWeight: 600,
+                lineHeight: 1.35,
+                color: 'var(--color-fg)',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid var(--color-accent)',
+                borderRadius: 6,
+                outline: 'none',
+                resize: 'none',
+                padding: '6px 8px',
+                fontFamily: 'inherit',
+              }}
+            />
+          ) : (
+            <Typography
+              component="h1"
+              onClick={() => setTitleEditing(true)}
+              sx={{
+                fontSize: 17,
+                fontWeight: 600,
+                lineHeight: 1.35,
+                cursor: 'text',
+                px: 1,
+                py: 0.75,
+                mx: -1,
+                borderRadius: 1,
+                transition: 'background 100ms',
+                '&:hover': { background: 'rgba(255,255,255,0.04)' },
+              }}
             >
-              {task.sprint.name}
-            </span>
+              {task.title}
+            </Typography>
           )}
-          <div className="flex-1" />
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-[var(--radius-md)] text-[var(--color-fg-subtle)]
-                       hover:text-[var(--color-fg)] hover:bg-[rgba(255,255,255,0.06)]
-                       transition-colors outline-none
-                       focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-            aria-label="Close task"
+        </Box>
+
+        <Divider />
+
+        {/* Properties */}
+        <Box sx={{ px: 2.5, py: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          <PropertyRow label="Status">
+            <StatusCell taskId={task.id} status={task.status as any} workspaceId={workspaceId} />
+          </PropertyRow>
+          <PropertyRow label="Priority">
+            <PriorityCell taskId={task.id} priority={task.priority as any} workspaceId={workspaceId} />
+          </PropertyRow>
+          <PropertyRow label="Owner">
+            <OwnerCell taskId={task.id} assignee={task.assignee} members={members} workspaceId={workspaceId} />
+          </PropertyRow>
+          <PropertyRow label="Due date">
+            <DueDateCell taskId={task.id} dueAt={task.dueAt} workspaceId={workspaceId} />
+          </PropertyRow>
+        </Box>
+
+        <Divider />
+
+        {/* Description */}
+        <Box sx={{ px: 2.5, py: 2.5 }}>
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: 'text.disabled',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              mb: 1.5,
+            }}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
-        </header>
+            Description
+          </Typography>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Add a description…"
+            rows={3}
+            style={{
+              width: '100%',
+              fontSize: 13,
+              color: 'var(--color-fg)',
+              lineHeight: 1.6,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              resize: 'none',
+              fontFamily: 'inherit',
+              padding: '8px 10px',
+              marginLeft: -10,
+              borderRadius: 6,
+              transition: 'background 100ms',
+            }}
+            onFocus={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+            onBlur={(e) => { e.currentTarget.style.background = 'transparent'; saveDescription(); }}
+            onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+            onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) e.currentTarget.style.background = 'transparent'; }}
+          />
+        </Box>
 
-        {/* ── Scrollable body ─────────────────────────────────────────────── */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <Divider />
 
-          {/* Title */}
-          <div className="px-5 pt-6 pb-5">
-            {titleEditing ? (
+        {/* Updates header */}
+        <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 1.5, px: 2.5, pt: 2.5, pb: 1.5 }}>
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: 'text.disabled',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}
+          >
+            Updates
+          </Typography>
+          <Box sx={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+          {comments.length > 0 && (
+            <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>{comments.length}</Typography>
+          )}
+        </Box>
+
+        {/* Feed */}
+        <Box
+          ref={feedRef}
+          sx={{ flex: 1, overflowY: 'auto', px: 2.5, pb: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}
+          aria-live="polite"
+        >
+          {commentsLoading && (
+            <>
+              {[1, 2].map((i) => (
+                <Box key={i} sx={{ display: 'flex', gap: 1.5 }}>
+                  <Skeleton variant="circular" width={28} height={28} sx={{ flexShrink: 0 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Skeleton variant="text" width="40%" height={14} />
+                    <Skeleton variant="text" width="80%" height={14} />
+                  </Box>
+                </Box>
+              ))}
+            </>
+          )}
+          {!commentsLoading && comments.length === 0 && (
+            <Typography
+              variant="body2"
+              sx={{ color: 'text.disabled', textAlign: 'center', py: 4 }}
+            >
+              No updates yet. Be the first to add one.
+            </Typography>
+          )}
+          {comments.map((c) => (
+            <Box
+              key={c.id}
+              sx={{ display: 'flex', gap: 1.5, '&:hover .delete-btn': { opacity: 1 } }}
+            >
+              <Avatar name={c.user.name} avatarUrl={c.user.avatarUrl} size={28} className="mt-0.5 shrink-0" />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.5 }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 600 }}>{c.user.name}</Typography>
+                  <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>{relativeTime(c.createdAt)}</Typography>
+                  <Box
+                    component="button"
+                    className="delete-btn"
+                    onClick={() => deleteComment.mutate(c.id)}
+                    aria-label="Delete comment"
+                    sx={{
+                      ml: 'auto',
+                      opacity: 0,
+                      fontSize: 11,
+                      color: 'text.disabled',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'opacity 100ms, color 100ms',
+                      '&:hover': { color: 'error.main' },
+                      p: 0,
+                    }}
+                  >
+                    ✕
+                  </Box>
+                </Box>
+                <Typography
+                  sx={{ fontSize: 13, color: 'text.secondary', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-words' }}
+                >
+                  {renderContent(c.content)}
+                </Typography>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Composer */}
+        <Box
+          sx={{
+            flexShrink: 0,
+            px: 2.5,
+            py: 2,
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-end' }}>
+            <Avatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={28} className="mb-1 shrink-0" />
+            <Box
+              sx={{
+                flex: 1,
+                borderRadius: 1,
+                overflow: 'hidden',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                transition: 'border-color 150ms',
+                '&:focus-within': { borderColor: 'var(--color-accent)' },
+              }}
+            >
               <textarea
-                autoFocus
-                value={titleDraft}
-                onChange={(e) => setTitleDraft(e.target.value)}
-                onBlur={saveTitle}
+                ref={composerRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') { e.preventDefault(); saveTitle(); }
-                  if (e.key === 'Escape') { setTitleDraft(task.title); setTitleEditing(false); }
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitComment();
                 }}
-                rows={2}
-                className="w-full text-[17px] font-semibold text-[var(--color-fg)] leading-snug
-                           rounded-[var(--radius-md)] border outline-none resize-none px-2 py-1"
+                placeholder="Write an update… (@mention teammates)"
+                rows={1}
                 style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  borderColor: 'var(--color-accent)',
+                  width: '100%',
+                  background: 'transparent',
+                  fontSize: 13,
+                  color: 'var(--color-fg)',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'none',
+                  padding: '10px 12px 4px',
+                  fontFamily: 'inherit',
+                  minHeight: 38,
+                  maxHeight: 120,
+                  lineHeight: 1.45,
                 }}
               />
-            ) : (
-              <h1
-                onClick={() => setTitleEditing(true)}
-                className="text-[17px] font-semibold text-[var(--color-fg)] leading-snug
-                           cursor-text px-2 py-1 -mx-2 rounded-[var(--radius-md)]
-                           transition-colors duration-100"
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
-              >
-                {task.title}
-              </h1>
-            )}
-          </div>
-
-          <Divider />
-
-          {/* Properties — hover-reveal containers */}
-          <div className="px-5 py-5 flex flex-col gap-1">
-            <PropertyRow label="Status">
-              <StatusCell taskId={task.id} status={task.status as any} workspaceId={workspaceId} />
-            </PropertyRow>
-            <PropertyRow label="Priority">
-              <PriorityCell taskId={task.id} priority={task.priority as any} workspaceId={workspaceId} />
-            </PropertyRow>
-            <PropertyRow label="Owner">
-              <OwnerCell taskId={task.id} assignee={task.assignee} members={members} workspaceId={workspaceId} />
-            </PropertyRow>
-            <PropertyRow label="Due date">
-              <DueDateCell taskId={task.id} dueAt={task.dueAt} workspaceId={workspaceId} />
-            </PropertyRow>
-          </div>
-
-          <Divider />
-
-          {/* Description */}
-          <div className="px-5 py-5">
-            <span className="block text-[10px] font-semibold text-[var(--color-fg-subtle)] uppercase tracking-wider mb-3">
-              Description
-            </span>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onBlur={saveDescription}
-              placeholder="Add a description…"
-              rows={3}
-              className="w-full text-[13px] text-[var(--color-fg)] leading-relaxed
-                         placeholder:text-[var(--color-fg-subtle)]
-                         resize-none outline-none px-3 py-2.5 -mx-3 rounded-[var(--radius-md)]
-                         transition-colors duration-100"
-              onFocus={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-              onBlurCapture={(e) => { (e.currentTarget as HTMLElement).style.background = ''; saveDescription(); }}
-              onMouseEnter={(e) => { if (document.activeElement !== e.currentTarget) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-              onMouseLeave={(e) => { if (document.activeElement !== e.currentTarget) (e.currentTarget as HTMLElement).style.background = ''; }}
-            />
-          </div>
-
-          <Divider />
-
-          {/* Updates header */}
-          <div className="shrink-0 px-5 pt-5 pb-3 flex items-center gap-3">
-            <span className="text-[10px] font-semibold text-[var(--color-fg-subtle)] uppercase tracking-wider">
-              Updates
-            </span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-            {comments.length > 0 && (
-              <span className="text-[11px] text-[var(--color-fg-subtle)]">{comments.length}</span>
-            )}
-          </div>
-
-          {/* Feed */}
-          <div ref={feedRef} className="flex-1 overflow-y-auto px-5 pb-4 space-y-5" aria-live="polite">
-            {commentsLoading && (
-              <div className="space-y-4 py-2">
-                {[1, 2].map((i) => (
-                  <div key={i} className="flex gap-3 animate-pulse">
-                    <div className="w-7 h-7 rounded-full bg-[var(--color-surface-2)] shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-2.5 w-24 bg-[var(--color-surface-2)] rounded" />
-                      <div className="h-2.5 w-full bg-[var(--color-surface-2)] rounded" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {!commentsLoading && comments.length === 0 && (
-              <p className="text-[12px] text-[var(--color-fg-subtle)] text-center py-8">
-                No updates yet. Be the first to add one.
-              </p>
-            )}
-            {comments.map((c) => (
-              <div key={c.id} className="flex gap-3 group/comment">
-                <Avatar name={c.user.name} avatarUrl={c.user.avatarUrl} size={28} className="mt-0.5 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-[12px] font-semibold text-[var(--color-fg)]">{c.user.name}</span>
-                    <span className="text-[11px] text-[var(--color-fg-subtle)]">{relativeTime(c.createdAt)}</span>
-                    <button
-                      onClick={() => deleteComment.mutate(c.id)}
-                      className="ml-auto opacity-0 group-hover/comment:opacity-100 text-[11px]
-                                 text-[var(--color-fg-subtle)] hover:text-[var(--color-danger)]
-                                 transition-opacity duration-100 outline-none"
-                      aria-label="Delete comment"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="text-[13px] text-[var(--color-fg-muted)] leading-relaxed whitespace-pre-wrap break-words">
-                    {renderContent(c.content)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Composer */}
-          <div
-            className="shrink-0 px-5 py-4"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <div className="flex gap-3 items-end">
-              <Avatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={28} className="mb-1 shrink-0" />
-              <div
-                className="flex-1 rounded-[var(--radius-md)] overflow-hidden
-                           transition-colors duration-100"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-                onFocusCapture={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)'; }}
-                onBlurCapture={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)'; }}
-              >
-                <textarea
-                  ref={composerRef}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitComment();
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1.5, pb: 1.25 }}>
+                <Typography sx={{ fontSize: 10, color: 'text.disabled' }}>⌘+Enter to post</Typography>
+                <Box
+                  component="button"
+                  onClick={submitComment}
+                  disabled={!draft.trim() || createComment.isPending}
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    background: 'var(--color-accent)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 0.75,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    transition: 'opacity 100ms, transform 100ms',
+                    '&:hover:not(:disabled)': { opacity: 0.88 },
+                    '&:active:not(:disabled)': { transform: 'scale(0.97)' },
+                    '&:disabled': { opacity: 0.3, cursor: 'not-allowed' },
                   }}
-                  placeholder="Write an update… (@mention teammates)"
-                  rows={1}
-                  className="w-full bg-transparent text-[13px] text-[var(--color-fg)]
-                             placeholder:text-[var(--color-fg-subtle)]
-                             px-3 py-2.5 outline-none resize-none leading-snug"
-                  style={{ minHeight: '38px', maxHeight: '120px' }}
-                />
-                <div className="flex justify-between items-center px-3 pb-2.5">
-                  <span className="text-[10px] text-[var(--color-fg-subtle)]">⌘+Enter to post</span>
-                  <button
-                    onClick={submitComment}
-                    disabled={!draft.trim() || createComment.isPending}
-                    className="px-3 py-1 text-[12px] font-medium
-                               bg-[var(--color-accent)] text-white rounded-[var(--radius-md)]
-                               hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed
-                               transition-all duration-100
-                               focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/50 outline-none"
-                  >
-                    Post
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes slideInRight {
-          from { transform: translateX(100%); }
-          to   { transform: translateX(0); }
-        }
-      `}</style>
-    </>,
-    document.body,
+                >
+                  Post
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
@@ -374,6 +484,39 @@ interface TaskDetailPanelProps {
 
 export function TaskDetailPanel({ taskId, workspaceId, onClose }: TaskDetailPanelProps) {
   const { data: task } = useTaskDetail(taskId ?? '');
-  if (!taskId || !task) return null;
-  return <Panel task={task} workspaceId={workspaceId} onClose={onClose} />;
+
+  return (
+    <Drawer
+      anchor="right"
+      open={!!taskId}
+      onClose={onClose}
+      transitionDuration={{ enter: 240, exit: 180 }}
+      slotProps={{
+        paper: {
+          sx: { width: 500, maxWidth: '100vw' },
+        },
+        backdrop: {
+          sx: { background: 'oklch(0% 0 0 / 0.45)' },
+        },
+        transition: {
+          easing: {
+            enter: 'cubic-bezier(0.32, 0.72, 0, 1)',
+            exit: 'cubic-bezier(0.32, 0.72, 0, 1)',
+          },
+        } as any,
+      }}
+    >
+      {task ? (
+        <PanelContent task={task} workspaceId={workspaceId} onClose={onClose} />
+      ) : (
+        // Loading skeleton while task data arrives
+        <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Skeleton variant="text" width="60%" height={24} />
+          <Skeleton variant="rounded" height={6} sx={{ borderRadius: 999 }} />
+          <Skeleton variant="text" width="80%" height={16} />
+          <Skeleton variant="text" width="70%" height={16} />
+        </Box>
+      )}
+    </Drawer>
+  );
 }

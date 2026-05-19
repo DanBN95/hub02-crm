@@ -172,6 +172,19 @@ export const muiTheme = createTheme({
       },
     },
 
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          background: 'color-mix(in oklch, var(--color-surface) 88%, transparent)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderLeft: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '-12px 0 48px oklch(0% 0 0 / 0.4)',
+          backgroundImage: 'none',
+        },
+      },
+    },
+
     MuiDivider: {
       styleOverrides: {
         root: { borderColor: 'rgba(255,255,255,0.07)' },
