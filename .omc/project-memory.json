@@ -88,8 +88,20 @@
   "hotPaths": [
     {
       "path": "apps/web/src/features/tasks/components/TasksView.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1779136296243,
+      "accessCount": 9,
+      "lastAccessed": 1779180724883,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/features/tasks/components/TaskGroup.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1779180288600,
+      "type": "file"
+    },
+    {
+      "path": "apps/web/src/features/tasks/components/TaskDetailPanel.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1779182692208,
       "type": "file"
     },
     {

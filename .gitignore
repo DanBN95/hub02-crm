@@ -42,3 +42,5 @@ pnpm-debug.log*
 *.db-journal
 apps/web/.vite/
 apps/web/vite.config.js
+
+.omc/
