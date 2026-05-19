@@ -1,4 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DoneIcon from '@mui/icons-material/Done';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Skeleton from '@mui/material/Skeleton';
+import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import { useEffect, useState } from 'react';
 import { invitationsApi, type InvitationSummary } from '../../lib/invitations';
 
 interface Props {
@@ -21,14 +36,9 @@ export function WorkspaceSettings({ workspaceId, workspaceName }: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    invitationsApi
-      .list(workspaceId)
-      .then(setInvites)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    invitationsApi.list(workspaceId).then(setInvites).catch(() => {}).finally(() => setLoading(false));
   }, [workspaceId]);
 
   async function sendInvite(e: React.FormEvent) {
@@ -38,12 +48,8 @@ export function WorkspaceSettings({ workspaceId, workspaceName }: Props) {
     setSending(true);
     try {
       const invite = await invitationsApi.create(workspaceId, email.trim());
-      setInvites((prev) => {
-        const exists = prev.some((i) => i.id === invite.id);
-        return exists ? prev : [invite, ...prev];
-      });
+      setInvites((prev) => prev.some((i) => i.id === invite.id) ? prev : [invite, ...prev]);
       setEmail('');
-      // Auto-copy invite URL
       await copyUrl(invite.inviteUrl);
     } catch {
       setError('Failed to create invitation. Try again.');
@@ -57,107 +63,124 @@ export function WorkspaceSettings({ workspaceId, workspaceName }: Props) {
       await navigator.clipboard.writeText(url);
       setCopied(url);
       setTimeout(() => setCopied(null), 2000);
-    } catch {
-      // Clipboard not available — silently ignore
-    }
+    } catch { /* clipboard not available */ }
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <header className="shrink-0 px-6 py-4 border-b border-[var(--color-border)]">
-        <h1 className="text-[20px] font-semibold text-[var(--color-fg)] tracking-tight">Settings</h1>
-        <p className="text-[12px] text-[var(--color-fg-muted)] mt-0.5">{workspaceName}</p>
-      </header>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <Box
+        sx={{
+          px: 3, py: 2.5,
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+        }}
+      >
+        <Typography variant="h1" sx={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em' }}>
+          Settings
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+          {workspaceName}
+        </Typography>
+      </Box>
 
-      <div className="flex-1 overflow-auto px-6 py-6 max-w-[640px]">
+      {/* Body */}
+      <Box sx={{ flex: 1, overflow: 'auto', px: 3, py: 3, maxWidth: 640 }}>
+
         {/* Invite section */}
-        <section>
-          <h2 className="text-[13px] font-semibold text-[var(--color-fg)] mb-1">Invite members</h2>
-          <p className="text-[12px] text-[var(--color-fg-muted)] mb-4">
-            Send a 24-hour invite link. The link is copied to your clipboard automatically.
-          </p>
+        <Typography variant="h3" sx={{ mb: 0.5 }}>Invite members</Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2.5 }}>
+          Generates a 24-hour invite link. Copied to clipboard automatically.
+        </Typography>
 
-          <form onSubmit={sendInvite} className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="email"
-              placeholder="colleague@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 px-3 py-2 text-[13px] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-fg)] placeholder:text-[var(--color-fg-subtle)] focus:outline-none focus:border-[var(--color-accent)] transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={sending || !email.trim()}
-              className="px-4 py-2 text-[13px] font-medium rounded-[var(--radius-md)] bg-[var(--color-accent)] text-white hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
-            >
-              {sending ? 'Sending…' : 'Send invite'}
-            </button>
-          </form>
+        <Box component="form" onSubmit={sendInvite} sx={{ display: 'flex', gap: 1.5 }}>
+          <TextField
+            type="email"
+            placeholder="colleague@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            fullWidth
+            sx={{ flex: 1 }}
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            startIcon={<PersonAddIcon sx={{ fontSize: 16 }} />}
+            disabled={sending || !email.trim()}
+            sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+          >
+            {sending ? 'Sending…' : 'Send invite'}
+          </Button>
+        </Box>
 
-          {error && (
-            <p className="text-[12px] text-[var(--color-danger)] mt-2">{error}</p>
-          )}
-        </section>
+        {error && (
+          <Typography variant="body2" sx={{ color: 'error.main', mt: 1 }}>{error}</Typography>
+        )}
+
+        <Divider sx={{ my: 4 }} />
 
         {/* Pending invites */}
-        <section className="mt-8">
-          <h2 className="text-[13px] font-semibold text-[var(--color-fg)] mb-3">
-            Pending invitations
-            {invites.length > 0 && (
-              <span className="ml-2 text-[11px] font-normal text-[var(--color-fg-muted)]">
-                {invites.length}
-              </span>
-            )}
-          </h2>
-
-          {loading ? (
-            <div className="space-y-2">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-10 rounded-[var(--radius-md)] bg-[var(--color-surface)] animate-pulse" />
-              ))}
-            </div>
-          ) : invites.length === 0 ? (
-            <p className="text-[12px] text-[var(--color-fg-subtle)]">No pending invitations.</p>
-          ) : (
-            <ul className="space-y-1">
-              {invites.map((invite) => (
-                <li
-                  key={invite.id}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)]"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] text-[var(--color-fg)] truncate">{invite.email}</p>
-                    <p className="text-[11px] text-[var(--color-fg-subtle)]">
-                      {relativeExpiry(invite.expiresAt)} · {invite.role}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => copyUrl(invite.inviteUrl)}
-                    className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-[var(--radius-sm)] border border-[var(--color-border)] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:border-[var(--color-border-strong,var(--color-border))] transition-colors"
-                  >
-                    {copied === invite.inviteUrl ? (
-                      <>
-                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                          <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                        </svg>
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                          <path d="M4 2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V5.5L11.5 2H7a2 2 0 0 0-2 2v1H4V4a2 2 0 0 1 2-2h4v2.5a1 1 0 0 0 1 1H13V9a1 1 0 0 1-1 1h-1V7a2 2 0 0 0-2-2H4zm0 4h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z"/>
-                        </svg>
-                        Copy link
-                      </>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Typography variant="h3">Pending invitations</Typography>
+          {invites.length > 0 && (
+            <Chip
+              label={invites.length}
+              size="small"
+              sx={{ height: 18, fontSize: 10, fontWeight: 600, background: 'rgba(255,255,255,0.08)' }}
+            />
           )}
-        </section>
-      </div>
-    </div>
+        </Box>
+
+        {loading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {[1, 2].map((i) => <Skeleton key={i} variant="rounded" height={52} sx={{ borderRadius: 1.5 }} />)}
+          </Box>
+        ) : invites.length === 0 ? (
+          <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+            No pending invitations.
+          </Typography>
+        ) : (
+          <List disablePadding sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+            {invites.map((invite) => (
+              <ListItem
+                key={invite.id}
+                sx={{
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  borderRadius: 1.5,
+                  background: 'rgba(255,255,255,0.02)',
+                  px: 2,
+                  py: 1.25,
+                  '&:hover': { background: 'rgba(255,255,255,0.04)' },
+                  transition: 'background 120ms',
+                }}
+                secondaryAction={
+                  <Tooltip title={copied === invite.inviteUrl ? 'Copied!' : 'Copy invite link'} placement="left">
+                    <IconButton
+                      size="small"
+                      onClick={() => copyUrl(invite.inviteUrl)}
+                      sx={{
+                        color: copied === invite.inviteUrl ? 'success.main' : 'text.secondary',
+                        '&:hover': { color: 'text.primary' },
+                        transition: 'color 150ms',
+                      }}
+                    >
+                      {copied === invite.inviteUrl
+                        ? <DoneIcon sx={{ fontSize: 16 }} />
+                        : <ContentCopyIcon sx={{ fontSize: 16 }} />
+                      }
+                    </IconButton>
+                  </Tooltip>
+                }
+              >
+                <ListItemText
+                  primary={invite.email}
+                  secondary={`${relativeExpiry(invite.expiresAt)} · ${invite.role}`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </Box>
+    </Box>
   );
 }
