@@ -84,7 +84,7 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
             ))}
           </div>
         ) : (
-          <div className="space-y-8 max-w-[1200px]">
+          <div className="flex flex-col gap-4 max-w-[1200px]">
             {sprints.map((sprint, idx) => (
               <TaskGroup
                 key={sprint.id}
@@ -103,7 +103,6 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
             <TaskGroup
               title="Backlog"
               color="oklch(60% 0 0)"
-              extraTopGap
               tasks={groups.backlog}
               workspaceId={workspaceId}
               members={members}

@@ -83,7 +83,6 @@ interface Props {
   onAddTask: () => void;
   onOpenDetail: (taskId: string) => void;
   defaultOpen?: boolean;
-  extraTopGap?: boolean;
 }
 
 export function TaskGroup({
@@ -96,13 +95,12 @@ export function TaskGroup({
   onAddTask,
   onOpenDetail,
   defaultOpen = true,
-  extraTopGap = false,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen);
 
   return (
     <div
-      className={`rounded-[var(--radius-lg)] overflow-hidden${extraTopGap ? ' mt-16' : ''}`}
+      className={`rounded-[var(--radius-lg)]`}
       style={{
         background: 'color-mix(in oklch, var(--color-surface) 82%, transparent)',
         backdropFilter: 'blur(12px)',

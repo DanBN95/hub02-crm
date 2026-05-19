@@ -99,7 +99,7 @@ export function Sidebar({ active, onSelect }: Props) {
         </div>
       </div>
 
-      <nav className="flex flex-col p-2 gap-0.5 flex-1">
+      <nav className="flex flex-col p-3 gap-1.5 flex-1">
         {ITEMS.filter((i) => !i.bottom).map((item) => {
           const isActive = item.key === active;
           return (
@@ -107,20 +107,23 @@ export function Sidebar({ active, onSelect }: Props) {
               key={item.key}
               type="button"
               onClick={() => onSelect(item.key)}
-              className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-md)] text-[13px] font-medium text-left transition-colors ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-[15px] font-medium text-left transition-all ${
                 isActive
-                  ? 'bg-[var(--color-surface-2)] text-[var(--color-fg)]'
-                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-surface-2)]'
+                  ? 'bg-[var(--color-accent)]/15 text-[var(--color-fg)]'
+                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[rgba(255,255,255,0.09)]'
               }`}
             >
-              <span className={isActive ? 'text-[var(--color-accent)]' : ''}>{item.icon}</span>
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--color-accent)]" />
+              )}
+              <span className={`shrink-0 ${isActive ? 'text-[var(--color-accent)]' : ''}`}>{item.icon}</span>
               <span>{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="p-2 border-t border-[var(--color-border)]">
+      <div className="p-3 border-t border-[var(--color-border)]">
         {ITEMS.filter((i) => i.bottom).map((item) => {
           const isActive = item.key === active;
           return (
@@ -128,13 +131,16 @@ export function Sidebar({ active, onSelect }: Props) {
               key={item.key}
               type="button"
               onClick={() => onSelect(item.key)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-md)] text-[13px] font-medium text-left transition-colors ${
+              className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] text-[15px] font-medium text-left transition-all ${
                 isActive
-                  ? 'bg-[var(--color-surface-2)] text-[var(--color-fg)]'
-                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[var(--color-surface-2)]'
+                  ? 'bg-[var(--color-accent)]/15 text-[var(--color-fg)]'
+                  : 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-[rgba(255,255,255,0.09)]'
               }`}
             >
-              <span className={isActive ? 'text-[var(--color-accent)]' : ''}>{item.icon}</span>
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--color-accent)]" />
+              )}
+              <span className={`shrink-0 ${isActive ? 'text-[var(--color-accent)]' : ''}`}>{item.icon}</span>
               <span>{item.label}</span>
             </button>
           );
