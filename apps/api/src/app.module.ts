@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { TeamsModule } from './modules/teams/teams.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { SprintsModule } from './modules/sprints/sprints.module';
@@ -36,6 +37,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
     CommentsModule,
     InvitationsModule,
     TeamsModule,
+    DocumentsModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: GlobalExceptionFilter }],
 })

@@ -35,6 +35,7 @@ model User {
   workspaceMembers WorkspaceMember[]
   assignedTasks    Task[]            @relation("TaskAssignee")
   comments         Comment[]
+  uploadedDocs     Document[]
 }
 
 model Workspace {
@@ -49,6 +50,8 @@ model Workspace {
   sprints     Sprint[]
   tasks       Task[]
   teams       Team[]
+  folders     Folder[]
+  documents   Document[]
   invitations WorkspaceInvitation[]
 }
 
@@ -145,6 +148,39 @@ model WorkspaceInvitation {
 
   @@index([workspaceId])
   @@index([token])
+}
+
+model Folder {
+  id          String     @id @default(cuid())
+  workspaceId String
+  name        String
+  createdAt   DateTime   @default(now())
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  documents Document[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  folderId     String?
+  uploadedById String
+  name         String
+  mimeType     String
+  size         Int
+  content      Bytes
+  createdAt    DateTime @default(now())
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  folder       Folder?   @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  uploadedBy   User      @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([folderId])
+  @@index([uploadedById])
 }
 
 model Comment {

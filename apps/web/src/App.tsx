@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CommandPalette } from './components/CommandPalette';
 import { Sidebar, type NavKey } from './components/layout/Sidebar';
+import { NotificationProvider } from './context/NotificationContext';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { LoginPage } from './features/auth/LoginPage';
 import { DocumentsView } from './features/documents/components/DocumentsView';
@@ -50,7 +51,7 @@ function AppShell() {
         )}
         {nav === 'sprints' && <SprintsTable workspaceId={workspace.id} />}
         {nav === 'teams' && <TeamsView workspaceId={workspace.id} />}
-        {nav === 'documents' && <DocumentsView />}
+        {nav === 'documents' && <DocumentsView workspaceId={workspace.id} />}
         {nav === 'settings' && (
           <WorkspaceSettings workspaceId={workspace.id} workspaceName={workspace.name} />
         )}
@@ -69,8 +70,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <WorkspaceProvider>
-      <AppShell />
-    </WorkspaceProvider>
+    <NotificationProvider>
+      <WorkspaceProvider>
+        <AppShell />
+      </WorkspaceProvider>
+    </NotificationProvider>
   );
 }

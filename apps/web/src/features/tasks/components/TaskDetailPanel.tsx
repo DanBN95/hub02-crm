@@ -16,6 +16,7 @@ import { useMembers } from '../../../lib/members.queries';
 import { useComments, useCreateComment, useDeleteComment } from '../comments.queries';
 import { useTaskDetail, useUpdateTask } from '../tasks.queries';
 import type { TaskWithRelations } from '../tasks.api';
+import { MentionDropdown } from './MentionDropdown';
 import { DueDateCell } from './cells/DueDateCell';
 import { OwnerCell } from './cells/OwnerCell';
 import { PriorityCell } from './cells/PriorityCell';
@@ -95,6 +96,8 @@ function PanelContent({ task, workspaceId, onClose }: PanelContentProps) {
   const [titleDraft, setTitleDraft] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
   const [draft, setDraft] = useState('');
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
 
@@ -453,22 +456,55 @@ function PanelContent({ task, workspaceId, onClose }: PanelContentProps) {
         >
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-end' }}>
             <Avatar name={currentUser.name} avatarUrl={currentUser.avatarUrl} size={28} className="mb-1 shrink-0" />
-            <Box
-              sx={{
-                flex: 1,
-                borderRadius: 1,
-                overflow: 'hidden',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                transition: 'border-color 150ms',
-                '&:focus-within': { borderColor: 'var(--color-accent)' },
-              }}
-            >
+            <Box sx={{ flex: 1, position: 'relative' }}>
+              <MentionDropdown
+                open={mentionOpen}
+                query={mentionQuery}
+                members={members}
+                onSelect={(name) => {
+                  const cursor = composerRef.current?.selectionStart ?? draft.length;
+                  const before = draft.slice(0, cursor);
+                  const after = draft.slice(cursor);
+                  const replaced = before.replace(/@\w*$/, `@${name} `);
+                  setDraft(replaced + after);
+                  setMentionOpen(false);
+                  setMentionQuery('');
+                  setTimeout(() => {
+                    composerRef.current?.setSelectionRange(replaced.length, replaced.length);
+                    composerRef.current?.focus();
+                  }, 0);
+                }}
+                onClose={() => setMentionOpen(false)}
+              />
+              <Box
+                sx={{
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  transition: 'border-color 150ms',
+                  '&:focus-within': { borderColor: 'var(--color-accent)' },
+                }}
+              >
               <textarea
                 ref={composerRef}
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDraft(val);
+                  const cursor = e.target.selectionStart ?? val.length;
+                  const before = val.slice(0, cursor);
+                  const match = before.match(/@(\w*)$/);
+                  if (match) {
+                    setMentionOpen(true);
+                    setMentionQuery(match[1] ?? '');
+                  } else {
+                    setMentionOpen(false);
+                    setMentionQuery('');
+                  }
+                }}
                 onKeyDown={(e) => {
+                  if (mentionOpen) return; // let MentionDropdown handle arrow/enter/escape
                   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitComment();
                 }}
                 placeholder="Write an update… (@mention teammates)"
@@ -514,7 +550,8 @@ function PanelContent({ task, workspaceId, onClose }: PanelContentProps) {
                   Post
                 </Box>
               </Box>
-            </Box>
+              </Box>{/* closes borderRadius styled box */}
+            </Box>{/* closes position:relative wrapper */}
           </Box>
         </Box>
       </Box>

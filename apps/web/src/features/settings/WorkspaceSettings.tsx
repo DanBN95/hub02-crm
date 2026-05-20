@@ -14,6 +14,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
+import { useNotify } from '../../context/NotificationContext';
 import { invitationsApi, type InvitationSummary } from '../../lib/invitations';
 
 interface Props {
@@ -30,11 +31,11 @@ function relativeExpiry(expiresAt: string) {
 }
 
 export function WorkspaceSettings({ workspaceId, workspaceName }: Props) {
+  const { notify } = useNotify();
   const [email, setEmail] = useState('');
   const [invites, setInvites] = useState<InvitationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,15 +45,15 @@ export function WorkspaceSettings({ workspaceId, workspaceName }: Props) {
   async function sendInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
-    setError(null);
     setSending(true);
     try {
       const invite = await invitationsApi.create(workspaceId, email.trim());
       setInvites((prev) => prev.some((i) => i.id === invite.id) ? prev : [invite, ...prev]);
       setEmail('');
       await copyUrl(invite.inviteUrl);
+      notify('Invitation sent — link copied to clipboard', 'success');
     } catch {
-      setError('Failed to create invitation. Try again.');
+      notify('Failed to create invitation. Try again.', 'error');
     } finally {
       setSending(false);
     }
@@ -112,10 +113,6 @@ export function WorkspaceSettings({ workspaceId, workspaceName }: Props) {
             {sending ? 'Sending…' : 'Send invite'}
           </Button>
         </Box>
-
-        {error && (
-          <Typography variant="body2" sx={{ color: 'error.main', mt: 1 }}>{error}</Typography>
-        )}
 
         <Divider sx={{ my: 4 }} />
 
