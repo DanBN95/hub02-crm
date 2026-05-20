@@ -36,6 +36,7 @@ model User {
   assignedTasks    Task[]            @relation("TaskAssignee")
   comments         Comment[]
   uploadedDocs     Document[]
+  teamMembers      TeamMember[]
 }
 
 model Workspace {
@@ -62,11 +63,25 @@ model Team {
   color       String   @default("#7c7ff5")
   createdAt   DateTime @default(now())
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   tasks     Task[]
+  members   TeamMember[]
 
   @@unique([workspaceId, name])
   @@index([workspaceId])
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  userId String
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
 }
 
 model WorkspaceMember {

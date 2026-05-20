@@ -1,5 +1,6 @@
 import AddIcon from '@mui/icons-material/Add';
 import GroupsIcon from '@mui/icons-material/Groups';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
@@ -7,17 +8,21 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
 import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 import { Avatar } from '../../components/ui/Avatar';
+import { useNotify } from '../../context/NotificationContext';
+import { useMembers } from '../../lib/members.queries';
 import { useTasksList } from '../tasks/tasks.queries';
 import type { TaskWithRelations } from '../tasks/tasks.api';
 import { TaskDetailPanel } from '../tasks/components/TaskDetailPanel';
-import { useTeamsList, useCreateTeam } from './teams.queries';
-import type { Team } from './teams.api';
+import { useTeamsList, useCreateTeam, useAddTeamMember, useRemoveTeamMember } from './teams.queries';
+import type { Team, TeamMember } from './teams.api';
 
 const PALETTE = [
   '#7c7ff5', '#e07b54', '#54b8e0', '#54e09e',
@@ -58,25 +63,18 @@ function TaskRow({ task, onClick }: { task: TaskWithRelations; onClick: () => vo
         '&:hover': { background: 'rgba(255,255,255,0.04)' },
       }}
     >
-      {/* Status dot */}
       <span style={{
         width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
         background: STATUS_COLORS[task.status] ?? STATUS_COLORS.BACKLOG,
       }} />
-
-      {/* Title */}
       <Typography sx={{ fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {task.title}
       </Typography>
-
-      {/* Sprint */}
       {task.sprint && (
         <Typography variant="caption" sx={{ flexShrink: 0, color: 'text.disabled' }}>
           {task.sprint.name}
         </Typography>
       )}
-
-      {/* Status chip */}
       <Chip
         label={STATUS_LABELS[task.status]}
         size="small"
@@ -87,8 +85,6 @@ function TaskRow({ task, onClick }: { task: TaskWithRelations; onClick: () => vo
           border: `1px solid ${STATUS_COLORS[task.status]}40`,
         }}
       />
-
-      {/* Assignee */}
       {task.assignee && (
         <Tooltip title={task.assignee.name} placement="left">
           <span>
@@ -118,11 +114,7 @@ function NewGroupDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      slotProps={{ paper: { sx: { width: 360 } } }}
-    >
+    <Dialog open={open} onClose={onClose} slotProps={{ paper: { sx: { width: 360 } } }}>
       <DialogTitle sx={{ fontSize: 15, fontWeight: 600, pb: 1 }}>New group</DialogTitle>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogContent sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -134,8 +126,6 @@ function NewGroupDialog({
             fullWidth
             placeholder="e.g. Engineering"
           />
-
-          {/* Color swatches */}
           <Box>
             <Typography sx={{ fontSize: 11, color: 'text.disabled', mb: 1 }}>Color</Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -144,18 +134,15 @@ function NewGroupDialog({
                   key={c}
                   onClick={() => setColor(c)}
                   sx={{
-                    width: 24, height: 24, borderRadius: '50%',
-                    background: c, cursor: 'pointer',
+                    width: 24, height: 24, borderRadius: '50%', background: c, cursor: 'pointer',
                     outline: color === c ? `2px solid ${c}` : '2px solid transparent',
-                    outlineOffset: 2,
-                    transition: 'outline 120ms',
+                    outlineOffset: 2, transition: 'outline 120ms',
                   }}
                 />
               ))}
             </Box>
           </Box>
         </DialogContent>
-
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button variant="text" onClick={onClose} sx={{ color: 'text.secondary' }}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={!name.trim() || create.isPending}>
@@ -167,6 +154,193 @@ function NewGroupDialog({
   );
 }
 
+// ── Add member dialog ──────────────────────────────────────────────────────────
+function AddMemberDialog({
+  open,
+  onClose,
+  workspaceId,
+  teamId,
+  existingMembers,
+}: {
+  open: boolean;
+  onClose: () => void;
+  workspaceId: string;
+  teamId: string;
+  existingMembers: TeamMember[];
+}) {
+  const { notify } = useNotify();
+  const { data: allMembers = [] } = useMembers(workspaceId);
+  const addMember = useAddTeamMember(workspaceId);
+  const [search, setSearch] = useState('');
+
+  const existingIds = new Set(existingMembers.map((m) => m.id));
+  const available = allMembers.filter(
+    (m) => !existingIds.has(m.id) && m.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const handleAdd = async (userId: string, name: string) => {
+    try {
+      await addMember.mutateAsync({ teamId, userId });
+      notify(`${name} added to group`, 'success');
+      onClose();
+      setSearch('');
+    } catch {
+      notify('Failed to add member', 'error');
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={() => { onClose(); setSearch(''); }} slotProps={{ paper: { sx: { width: 360 } } }}>
+      <DialogTitle sx={{ fontSize: 15, fontWeight: 600, pb: 1 }}>Add member</DialogTitle>
+      <DialogContent sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        <TextField
+          autoFocus
+          size="small"
+          placeholder="Search members…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          fullWidth
+        />
+        {available.length === 0 ? (
+          <Typography sx={{ fontSize: 13, color: 'text.disabled', py: 2, textAlign: 'center' }}>
+            {allMembers.length === existingMembers.length
+              ? 'All workspace members are already in this group.'
+              : 'No members match your search.'}
+          </Typography>
+        ) : (
+          <MenuList sx={{ p: 0, maxHeight: 280, overflowY: 'auto' }}>
+            {available.map((m) => (
+              <MenuItem
+                key={m.id}
+                onClick={() => handleAdd(m.id, m.name)}
+                disabled={addMember.isPending}
+                sx={{ gap: 1.5, borderRadius: 1, px: 1.5, py: 1 }}
+              >
+                <Avatar name={m.name} avatarUrl={m.avatarUrl} size={28} />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 500 }}>{m.name}</Typography>
+                  <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>{m.email}</Typography>
+                </Box>
+              </MenuItem>
+            ))}
+          </MenuList>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2.5 }}>
+        <Button variant="text" onClick={() => { onClose(); setSearch(''); }} sx={{ color: 'text.secondary' }}>
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+// ── Members strip ──────────────────────────────────────────────────────────────
+function MembersStrip({
+  members,
+  teamId,
+  workspaceId,
+  onAddClick,
+}: {
+  members: TeamMember[];
+  teamId: string;
+  workspaceId: string;
+  onAddClick: () => void;
+}) {
+  const { notify, confirm } = useNotify();
+  const removeMember = useRemoveTeamMember(workspaceId);
+
+  const handleRemove = async (member: TeamMember) => {
+    const ok = await confirm(`Remove ${member.name} from this group?`, 'Remove member');
+    if (!ok) return;
+    try {
+      await removeMember.mutateAsync({ teamId, userId: member.id });
+      notify(`${member.name} removed`, 'success');
+    } catch {
+      notify('Failed to remove member', 'error');
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        px: 3,
+        py: 1.5,
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        flexWrap: 'wrap',
+        flexShrink: 0,
+      }}
+    >
+      <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.07em', mr: 0.5 }}>
+        Members
+      </Typography>
+
+      {members.length === 0 && (
+        <Typography sx={{ fontSize: 12, color: 'text.disabled', fontStyle: 'italic' }}>None yet</Typography>
+      )}
+
+      {members.map((m) => (
+        <Tooltip key={m.id} title={`${m.name} — click to remove`} placement="top">
+          <Box
+            onClick={() => handleRemove(m)}
+            sx={{
+              position: 'relative',
+              cursor: 'pointer',
+              borderRadius: '50%',
+              '&:hover .remove-ring': { opacity: 1 },
+            }}
+          >
+            <Avatar name={m.name} avatarUrl={m.avatarUrl} size={28} />
+            <Box
+              className="remove-ring"
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: '50%',
+                background: 'oklch(0% 0 0 / 0.55)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0,
+                transition: 'opacity 120ms',
+                fontSize: 11,
+                color: '#fff',
+                fontWeight: 700,
+              }}
+            >
+              ✕
+            </Box>
+          </Box>
+        </Tooltip>
+      ))}
+
+      <Tooltip title="Add member">
+        <Box
+          onClick={onAddClick}
+          sx={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: '1.5px dashed rgba(255,255,255,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: 'text.disabled',
+            transition: 'border-color 120ms, color 120ms',
+            '&:hover': { borderColor: 'var(--color-accent)', color: 'var(--color-accent)' },
+          }}
+        >
+          <PersonAddOutlinedIcon sx={{ fontSize: 14 }} />
+        </Box>
+      </Tooltip>
+    </Box>
+  );
+}
+
 // ── Main view ─────────────────────────────────────────────────────────────────
 export function TeamsView({ workspaceId }: Props) {
   const { data: teams = [], isLoading: teamsLoading } = useTeamsList(workspaceId);
@@ -174,12 +348,12 @@ export function TeamsView({ workspaceId }: Props) {
   const tasks = tasksPage?.items ?? [];
 
   const [selectedId, setSelectedId] = useState<string | 'general'>('general');
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null);
 
   const isLoading = teamsLoading || tasksLoading;
 
-  // Group tasks: null teamId → General
   const generalTasks = tasks.filter((t) => !t.team);
   const tasksForTeam = (teamId: string) => tasks.filter((t) => t.team?.id === teamId);
 
@@ -190,6 +364,7 @@ export function TeamsView({ workspaceId }: Props) {
   const selectedTeam: Team | undefined = teams.find((t) => t.id === selectedId);
   const selectedLabel = selectedId === 'general' ? 'General' : (selectedTeam?.name ?? '');
   const selectedColor = selectedId === 'general' ? '#7c7ff5' : (selectedTeam?.color ?? '#7c7ff5');
+  const selectedMembers: TeamMember[] = selectedId === 'general' ? [] : (selectedTeam?.members ?? []);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -206,20 +381,15 @@ export function TeamsView({ workspaceId }: Props) {
       {/* Body */}
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
-        {/* ── Left sidebar — team list ──────────────────────────────────── */}
+        {/* ── Left sidebar ─────────────────────────────────────────────── */}
         <Box
           sx={{
-            width: 220,
-            flexShrink: 0,
+            width: 220, flexShrink: 0,
             borderRight: '1px solid rgba(255,255,255,0.07)',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}
         >
           <Box sx={{ flex: 1, overflowY: 'auto', py: 1.5, px: 1.5 }}>
-
-            {/* General (always first) */}
             <TeamNavItem
               label="General"
               color="#7c7ff5"
@@ -227,8 +397,6 @@ export function TeamsView({ workspaceId }: Props) {
               active={selectedId === 'general'}
               onClick={() => setSelectedId('general')}
             />
-
-            {/* Real teams */}
             {isLoading
               ? [1, 2, 3].map((i) => (
                 <Skeleton key={i} variant="rounded" height={36} sx={{ borderRadius: 1, mb: 0.5 }} />
@@ -246,16 +414,13 @@ export function TeamsView({ workspaceId }: Props) {
             }
           </Box>
 
-          {/* New group button */}
           <Box sx={{ p: 1.5, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
             <Button
               startIcon={<AddIcon sx={{ fontSize: 14 }} />}
-              onClick={() => setDialogOpen(true)}
+              onClick={() => setNewGroupOpen(true)}
               fullWidth
               sx={{
-                justifyContent: 'flex-start',
-                fontSize: 12,
-                color: 'text.secondary',
+                justifyContent: 'flex-start', fontSize: 12, color: 'text.secondary',
                 '&:hover': { color: 'text.primary', background: 'rgba(255,255,255,0.05)' },
               }}
             >
@@ -264,7 +429,7 @@ export function TeamsView({ workspaceId }: Props) {
           </Box>
         </Box>
 
-        {/* ── Right — task list ─────────────────────────────────────────── */}
+        {/* ── Right panel ──────────────────────────────────────────────── */}
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
           {/* Section header */}
@@ -286,6 +451,16 @@ export function TeamsView({ workspaceId }: Props) {
             <GroupsIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
           </Box>
 
+          {/* Members strip — only for real teams */}
+          {selectedId !== 'general' && selectedTeam && (
+            <MembersStrip
+              members={selectedMembers}
+              teamId={selectedTeam.id}
+              workspaceId={workspaceId}
+              onAddClick={() => setAddMemberOpen(true)}
+            />
+          )}
+
           {/* Task list */}
           <Box sx={{ flex: 1, overflowY: 'auto', py: 1, px: 1 }}>
             {isLoading ? (
@@ -305,25 +480,30 @@ export function TeamsView({ workspaceId }: Props) {
               </Box>
             ) : (
               selectedTasks.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  onClick={() => setDetailTaskId(task.id)}
-                />
+                <TaskRow key={task.id} task={task} onClick={() => setDetailTaskId(task.id)} />
               ))
             )}
           </Box>
         </Box>
       </Box>
 
-      {/* New group dialog */}
+      {/* Dialogs */}
       <NewGroupDialog
-        open={dialogOpen}
+        open={newGroupOpen}
         workspaceId={workspaceId}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => setNewGroupOpen(false)}
       />
 
-      {/* Task detail drawer */}
+      {selectedTeam && (
+        <AddMemberDialog
+          open={addMemberOpen}
+          onClose={() => setAddMemberOpen(false)}
+          workspaceId={workspaceId}
+          teamId={selectedTeam.id}
+          existingMembers={selectedMembers}
+        />
+      )}
+
       <TaskDetailPanel
         taskId={detailTaskId}
         workspaceId={workspaceId}
@@ -341,14 +521,8 @@ function TeamNavItem({
     <Box
       onClick={onClick}
       sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1.5,
-        px: 1.5,
-        py: 1,
-        borderRadius: 1,
-        cursor: 'pointer',
-        mb: 0.25,
+        display: 'flex', alignItems: 'center', gap: 1.5,
+        px: 1.5, py: 1, borderRadius: 1, cursor: 'pointer', mb: 0.25,
         background: active ? 'rgba(124,127,245,0.12)' : 'transparent',
         transition: 'background 100ms',
         '&:hover': { background: active ? 'rgba(124,127,245,0.16)' : 'rgba(255,255,255,0.04)' },

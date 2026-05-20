@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { CreateTeamDto } from './dto/create-team.dto';
 import { TeamsRepository } from './teams.repository';
 
@@ -19,5 +19,23 @@ export class TeamsService {
       }
       throw err;
     }
+  }
+
+  async addMember(teamId: string, userId: string) {
+    try {
+      return await this.repo.addMember(teamId, userId);
+    } catch (err: any) {
+      if (err?.code === 'P2002') {
+        throw new ConflictException('User is already a member of this group.');
+      }
+      if (err?.code === 'P2025') {
+        throw new NotFoundException('Team or user not found.');
+      }
+      throw err;
+    }
+  }
+
+  removeMember(teamId: string, userId: string) {
+    return this.repo.removeMember(teamId, userId);
   }
 }

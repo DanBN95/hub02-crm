@@ -17,3 +17,21 @@ export function useCreateTeam(workspaceId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['teams', workspaceId] }),
   });
 }
+
+export function useAddTeamMember(workspaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ teamId, userId }: { teamId: string; userId: string }) =>
+      teamsApi.addMember(workspaceId, teamId, userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['teams', workspaceId] }),
+  });
+}
+
+export function useRemoveTeamMember(workspaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ teamId, userId }: { teamId: string; userId: string }) =>
+      teamsApi.removeMember(workspaceId, teamId, userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['teams', workspaceId] }),
+  });
+}
