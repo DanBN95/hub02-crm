@@ -38,4 +38,8 @@ export class CreateTaskDto {
   @IsOptional()
   @IsDateString()
   dueAt?: string;
+
+  @IsOptional()
+  @IsString()
+  teamId?: string;
 }

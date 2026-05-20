@@ -48,7 +48,22 @@ model Workspace {
   members     WorkspaceMember[]
   sprints     Sprint[]
   tasks       Task[]
+  teams       Team[]
   invitations WorkspaceInvitation[]
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  color       String   @default("#7c7ff5")
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
 }
 
 model WorkspaceMember {
@@ -91,6 +106,7 @@ model Task {
   workspaceId String
   sprintId    String?
   assigneeId  String?
+  teamId      String?
   title       String
   description String?
   priority    Priority  @default(P2)
@@ -104,11 +120,13 @@ model Task {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   sprint    Sprint?   @relation(fields: [sprintId], references: [id], onDelete: SetNull)
   assignee  User?     @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  team      Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
   comments  Comment[]
 
   @@index([workspaceId])
   @@index([sprintId])
   @@index([assigneeId])
+  @@index([teamId])
   @@index([status])
   @@index([priority])
 }

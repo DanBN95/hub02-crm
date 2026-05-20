@@ -4,6 +4,7 @@ import { apiClient } from '../../lib/api-client';
 export interface TaskWithRelations extends Omit<Task, 'dueAt' | 'description'> {
   assignee: { id: string; name: string; avatarUrl: string | null; email: string } | null;
   sprint: { id: string; name: string } | null;
+  team: { id: string; name: string; color: string } | null;
   dueAt?: string | null;
   description?: string | null;
 }

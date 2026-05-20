@@ -6,6 +6,7 @@ import type { TaskFiltersDto } from './dto/task-filters.dto';
 export const taskWithRelations = {
   assignee: { select: { id: true, name: true, avatarUrl: true, email: true } },
   sprint: { select: { id: true, name: true } },
+  team: { select: { id: true, name: true, color: true } },
 } satisfies Prisma.TaskInclude;
 
 export type TaskWithRelations = Prisma.TaskGetPayload<{ include: typeof taskWithRelations }>;

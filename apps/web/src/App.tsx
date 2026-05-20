@@ -4,6 +4,7 @@ import { Sidebar, type NavKey } from './components/layout/Sidebar';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { LoginPage } from './features/auth/LoginPage';
 import { DocumentsView } from './features/documents/components/DocumentsView';
+import { TeamsView } from './features/teams/TeamsView';
 import { HomeView } from './features/home/HomeView';
 import { WorkspaceSettings } from './features/settings/WorkspaceSettings';
 import { SprintsTable } from './features/sprints/components/SprintsTable';
@@ -48,6 +49,7 @@ function AppShell() {
           />
         )}
         {nav === 'sprints' && <SprintsTable workspaceId={workspace.id} />}
+        {nav === 'teams' && <TeamsView workspaceId={workspace.id} />}
         {nav === 'documents' && <DocumentsView />}
         {nav === 'settings' && (
           <WorkspaceSettings workspaceId={workspace.id} workspaceName={workspace.name} />

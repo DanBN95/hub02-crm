@@ -4,8 +4,11 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
 import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
+import { useTeamsList } from '../../teams/teams.queries';
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from '../../../components/ui/Avatar';
 import { useWorkspace } from '../../../context/WorkspaceContext';
@@ -82,6 +85,7 @@ interface PanelContentProps {
 function PanelContent({ task, workspaceId, onClose }: PanelContentProps) {
   const update = useUpdateTask(workspaceId);
   const { data: members = [] } = useMembers(workspaceId);
+  const { data: teams = [] } = useTeamsList(workspaceId);
   const { data: comments = [], isLoading: commentsLoading } = useComments(task.id);
   const createComment = useCreateComment(task.id);
   const deleteComment = useDeleteComment(task.id);
@@ -261,6 +265,48 @@ function PanelContent({ task, workspaceId, onClose }: PanelContentProps) {
           </PropertyRow>
           <PropertyRow label="Due date">
             <DueDateCell taskId={task.id} dueAt={task.dueAt} workspaceId={workspaceId} />
+          </PropertyRow>
+          <PropertyRow label="Group">
+            <Select
+              size="small"
+              displayEmpty
+              value={task.team?.id ?? ''}
+              onChange={(e) => update.mutate({ id: task.id, dto: { teamId: e.target.value || null } as any })}
+              sx={{
+                fontSize: 12,
+                height: 28,
+                minWidth: 120,
+                '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.08)' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'var(--color-accent)', borderWidth: 1 },
+                '.MuiSelect-select': { py: '4px', px: '10px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 1 },
+                background: 'rgba(255,255,255,0.03)',
+              }}
+              renderValue={(val) => {
+                const team = teams.find((t) => t.id === val);
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: team?.color ?? '#7c7ff5', flexShrink: 0 }} />
+                    <span style={{ fontSize: 12 }}>{team?.name ?? 'General'}</span>
+                  </Box>
+                );
+              }}
+            >
+              <MenuItem value="">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#7c7ff5' }} />
+                  <em style={{ fontSize: 12, fontStyle: 'normal' }}>General</em>
+                </Box>
+              </MenuItem>
+              {teams.map((t) => (
+                <MenuItem key={t.id} value={t.id}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: t.color }} />
+                    {t.name}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
           </PropertyRow>
         </Box>
 

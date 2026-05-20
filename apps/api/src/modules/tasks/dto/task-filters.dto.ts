@@ -21,6 +21,10 @@ export class TaskFiltersDto {
 
   @IsOptional()
   @IsString()
+  teamId?: string;
+
+  @IsOptional()
+  @IsString()
   cursor?: string;
 
   @IsOptional()

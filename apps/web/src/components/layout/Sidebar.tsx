@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type NavKey = 'home' | 'tasks' | 'sprints' | 'documents' | 'settings';
+export type NavKey = 'home' | 'tasks' | 'sprints' | 'teams' | 'documents' | 'settings';
 
 interface NavItem {
   key: NavKey;
@@ -46,6 +46,18 @@ const ITEMS: NavItem[] = [
           strokeLinejoin="round"
           fill="none"
         />
+      </svg>
+    ),
+  },
+  {
+    key: 'teams',
+    label: 'Teams',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="5.5" cy="5" r="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <circle cx="10.5" cy="5" r="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        <path d="M1 13c0-2.21 2.015-4 4.5-4s4.5 1.79 4.5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+        <path d="M10.5 9.2c1.5.3 3.5 1.3 3.5 3.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
       </svg>
     ),
   },
@@ -146,7 +158,7 @@ export function Sidebar({ active, onSelect }: Props) {
           );
         })}
         <p className="text-[11px] text-[var(--color-fg-subtle)] leading-snug px-2.5 pt-2">
-          v0.3 · Sprint 3
+          v0.4 · Sprint 3
         </p>
       </div>
     </aside>
