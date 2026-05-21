@@ -18,6 +18,7 @@ export interface TasksPage {
 export interface TaskFilters {
   sprintId?: string;
   assigneeId?: string;
+  teamId?: string;
   status?: string;
   priority?: string;
   cursor?: string;

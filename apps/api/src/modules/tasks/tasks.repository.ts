@@ -19,12 +19,14 @@ export class TasksRepository {
     workspaceId: string,
     filters: TaskFiltersDto,
   ): Promise<{ items: TaskWithRelations[]; nextCursor: string | null; total: number }> {
-    const { cursor, limit = 50, orderBy = 'position', order = 'asc', q, ...where } = filters;
+    const { cursor, limit = 50, orderBy = 'position', order = 'asc', q, teamId, ...where } = filters;
 
     const whereClause: Prisma.TaskWhereInput = {
       workspaceId,
       ...where,
       ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
+      // 'general' is the virtual group for tasks with no team
+      ...(teamId === 'general' ? { teamId: null } : teamId ? { teamId } : {}),
     };
 
     const [total, items] = await Promise.all([

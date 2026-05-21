@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMembers } from '../../../lib/members.queries';
+import { useTeamsList } from '../../teams/teams.queries';
 import { useSprintsList } from '../../sprints/sprints.queries';
 import { useTasksList } from '../tasks.queries';
 import { useTaskFilters } from '../useTaskFilters';
@@ -28,6 +29,7 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
   const { data: sprints = [], isLoading: sprintsLoading } = useSprintsList(workspaceId);
   const { data: tasksPage, isLoading: tasksLoading } = useTasksList(workspaceId, { limit: 200, ...filters });
   const { data: members = [] } = useMembers(workspaceId);
+  const { data: teams = [] } = useTeamsList(workspaceId);
   const tasks = tasksPage?.items ?? [];
 
   const [slideoverDefaults, setSlideoverDefaults] = useState<{ sprintId?: string } | null>(null);
@@ -71,6 +73,7 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
         <TaskFilterBar
           filters={filters}
           members={members}
+          teams={teams}
           onFilter={setFilters}
           onClear={clearFilters}
         />

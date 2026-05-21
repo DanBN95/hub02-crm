@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import type { TaskFilters } from './tasks.api';
 
-const FILTER_KEYS = ['status', 'priority', 'assigneeId', 'q'] as const;
+const FILTER_KEYS = ['status', 'priority', 'assigneeId', 'teamId', 'q'] as const;
 type FilterKey = (typeof FILTER_KEYS)[number];
 
 // ── tiny URL-search-param store (no router required) ────────────────────────

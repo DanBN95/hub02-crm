@@ -26,10 +26,12 @@ const PRIORITIES = [
 ];
 
 interface Member { id: string; name: string; email: string; avatarUrl: string | null }
+interface TeamOption { id: string; name: string; color: string }
 
 interface Props {
   filters: TaskFilters;
   members: Member[];
+  teams: TeamOption[];
   onFilter: (patch: Partial<TaskFilters>) => void;
   onClear: () => void;
 }
@@ -45,7 +47,7 @@ const selectSx = {
   background: 'rgba(255,255,255,0.03)',
 };
 
-export function TaskFilterBar({ filters, members, onFilter, onClear }: Props) {
+export function TaskFilterBar({ filters, members, teams, onFilter, onClear }: Props) {
   const count = activeFilterCount(filters);
 
   return (
@@ -148,6 +150,50 @@ export function TaskFilterBar({ filters, members, onFilter, onClear }: Props) {
             <MenuItem value=""><em style={{ fontSize: 12 }}>Anyone</em></MenuItem>
             {members.map((m) => (
               <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+
+      {/* Team */}
+      {teams.length > 0 && (
+        <FormControl size="small">
+          <Select
+            displayEmpty
+            value={filters.teamId ?? ''}
+            onChange={(e) => onFilter({ teamId: e.target.value || undefined })}
+            sx={selectSx}
+            renderValue={(val) => {
+              if (!val) return <span style={{ color: 'var(--color-fg-subtle)', fontSize: 12 }}>Group</span>;
+              if (val === 'general') return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#7c7ff5', display: 'inline-block', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12 }}>General</span>
+                </Box>
+              );
+              const t = teams.find((t) => t.id === val);
+              return (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: t?.color, display: 'inline-block', flexShrink: 0 }} />
+                  <span style={{ fontSize: 12 }}>{t?.name ?? val}</span>
+                </Box>
+              );
+            }}
+          >
+            <MenuItem value=""><em style={{ fontSize: 12 }}>Any group</em></MenuItem>
+            <MenuItem value="general">
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#7c7ff5', display: 'inline-block' }} />
+                General
+              </Box>
+            </MenuItem>
+            {teams.map((t) => (
+              <MenuItem key={t.id} value={t.id}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: t.color, display: 'inline-block' }} />
+                  {t.name}
+                </Box>
+              </MenuItem>
             ))}
           </Select>
         </FormControl>
