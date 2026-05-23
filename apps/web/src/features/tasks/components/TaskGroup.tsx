@@ -80,7 +80,7 @@ interface Props {
   color: string;
   workspaceId: string;
   members: Member[];
-  onAddTask: () => void;
+  onAddTask?: () => void;
   onOpenDetail: (taskId: string) => void;
   defaultOpen?: boolean;
 }
@@ -176,15 +176,17 @@ export function TaskGroup({
             </tbody>
           </table>
 
-          <button
-            type="button"
-            onClick={onAddTask}
-            className="w-full text-left pl-10 pr-4 py-2.5 text-[12px] text-[var(--color-fg-subtle)]
-                       hover:text-[var(--color-fg)] transition-colors duration-100"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}
-          >
-            + Add task
-          </button>
+          {onAddTask && (
+            <button
+              type="button"
+              onClick={onAddTask}
+              className="w-full text-left pl-10 pr-4 py-2.5 text-[12px] text-[var(--color-fg-subtle)]
+                         hover:text-[var(--color-fg)] transition-colors duration-100"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}
+            >
+              + Add task
+            </button>
+          )}
         </div>
       )}
     </div>

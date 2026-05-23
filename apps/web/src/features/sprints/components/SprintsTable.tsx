@@ -179,18 +179,32 @@ function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
       <td className="px-3 py-2.5 w-44">
         <Timeline startsAt={sprint.startsAt} endsAt={sprint.endsAt} />
       </td>
-      <td className="px-3 py-2.5 w-32">
-        <span
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[var(--radius-full)] text-[11px] font-medium"
-          style={{
-            background: taskCount > 0 ? 'var(--color-accent)' : 'var(--color-surface-2)',
-            color: taskCount > 0 ? 'var(--color-accent-fg)' : 'var(--color-fg-muted)',
-            opacity: taskCount > 0 ? 0.85 : 1,
-          }}
-        >
-          {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
-          {taskCount > 0 && <span className="opacity-70">· {doneCount} done</span>}
-        </span>
+      <td className="px-3 py-2.5 w-36">
+        {taskCount === 0 ? (
+          <span className="text-[11px] text-[var(--color-fg-subtle)]">—</span>
+        ) : (
+          <div className="flex flex-col gap-1 min-w-[100px]">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-medium tabular-nums" style={{ color: 'var(--color-accent)' }}>
+                {doneCount} done
+              </span>
+              <span className="text-[10px] text-[var(--color-fg-subtle)] tabular-nums">
+                / {taskCount}
+              </span>
+            </div>
+            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${Math.round((doneCount / taskCount) * 100)}%`,
+                  background: doneCount === taskCount
+                    ? 'var(--color-success)'
+                    : 'var(--color-accent)',
+                }}
+              />
+            </div>
+          </div>
+        )}
       </td>
       <td className="px-3 py-2.5 w-28 text-center">
         {completed ? (

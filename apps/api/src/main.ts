@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const cookieParser = require('cookie-parser') as typeof import('cookie-parser');
 import { Logger } from 'nestjs-pino';
+import { createCollector } from '@parlex/collector-sdk';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -31,6 +32,19 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(cookieParser());
+
+  // Parlex collector — must come early in the middleware stack
+  const parlexMcpUrl = config.get<string>('PARLEX_MCP_URL', '');
+  const parlexApiKey = config.get<string>('PARLEX_API_KEY', '');
+  if (parlexMcpUrl && parlexApiKey) {
+    app.use(
+      createCollector({
+        mcpUrl: parlexMcpUrl,
+        apiKey: parlexApiKey,
+        debug: config.get<string>('NODE_ENV', 'development') !== 'production',
+      }),
+    );
+  }
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );

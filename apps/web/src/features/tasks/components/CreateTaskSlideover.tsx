@@ -3,40 +3,60 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '../../../components/ui/Button';
+import { useNotify } from '../../../context/NotificationContext';
 import { useCreateTask } from '../tasks.queries';
+
+const today = () => new Date().toISOString().slice(0, 10);
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required').max(255),
   description: z.string().max(10_000).optional(),
   priority: z.enum(['P0', 'P1', 'P2', 'P3']).optional(),
   status: z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']).optional(),
-  dueAt: z.string().optional(),
+  sprintId: z.string().optional(),
+  dueAt: z.string().optional().refine(
+    (val) => !val || val >= today(),
+    { message: 'Due date cannot be in the past' },
+  ),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+interface SprintOption {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
 
 interface Props {
   workspaceId: string;
   open: boolean;
   onClose: () => void;
+  sprints?: SprintOption[];
+  /** Pre-select a sprint when opening (overridden by active sprint if not set) */
   defaultSprintId?: string;
 }
 
-export function CreateTaskSlideover({ workspaceId, open, onClose, defaultSprintId }: Props) {
+export function CreateTaskSlideover({ workspaceId, open, onClose, sprints = [], defaultSprintId }: Props) {
   const titleRef = useRef<HTMLInputElement>(null);
   const create = useCreateTask(workspaceId);
+  const { notify } = useNotify();
+
+  const activeSprint = sprints.find((s) => s.isActive);
+  const resolvedDefault = defaultSprintId ?? activeSprint?.id ?? '';
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { priority: 'P2', status: 'BACKLOG' },
+    defaultValues: { priority: 'P2', status: 'BACKLOG', sprintId: resolvedDefault },
   });
 
   useEffect(() => {
     if (open) {
-      reset({ priority: 'P2', status: 'BACKLOG' });
+      reset({ priority: 'P2', status: 'BACKLOG', sprintId: resolvedDefault });
       setTimeout(() => titleRef.current?.focus(), 50);
     }
-  }, [open, reset]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -45,10 +65,12 @@ export function CreateTaskSlideover({ workspaceId, open, onClose, defaultSprintI
   }, [onClose]);
 
   const onSubmit = async (data: FormValues) => {
+    const { sprintId, ...rest } = data;
     await create.mutateAsync({
-      ...data,
-      ...(defaultSprintId ? { sprintId: defaultSprintId } : {}),
+      ...rest,
+      ...(sprintId ? { sprintId } : {}),
     });
+    notify('Task created successfully', 'success');
     onClose();
   };
 
@@ -85,6 +107,7 @@ export function CreateTaskSlideover({ workspaceId, open, onClose, defaultSprintI
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void handleSubmit(onSubmit)(); }}
           className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4"
         >
+          {/* Title */}
           <div>
             <label className="block text-[12px] text-[var(--color-fg-muted)] mb-1" htmlFor="title">
               Title <span className="text-[var(--color-danger)]">*</span>
@@ -99,6 +122,7 @@ export function CreateTaskSlideover({ workspaceId, open, onClose, defaultSprintI
             {errors.title && <p className="mt-1 text-[11px] text-[var(--color-danger)]">{errors.title.message}</p>}
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-[12px] text-[var(--color-fg-muted)] mb-1" htmlFor="description">
               Description
@@ -106,12 +130,32 @@ export function CreateTaskSlideover({ workspaceId, open, onClose, defaultSprintI
             <textarea
               id="description"
               {...register('description')}
-              rows={4}
+              rows={3}
               className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-[var(--radius-md)] px-3 py-2 text-[13px] text-[var(--color-fg)] focus-visible:outline-[var(--color-accent)] placeholder:text-[var(--color-fg-subtle)] resize-none"
               placeholder="Optional description…"
             />
           </div>
 
+          {/* Sprint */}
+          <div>
+            <label className="block text-[12px] text-[var(--color-fg-muted)] mb-1" htmlFor="sprintId">
+              Sprint
+            </label>
+            <select
+              id="sprintId"
+              {...register('sprintId')}
+              className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-[var(--radius-md)] px-3 py-2 text-[13px] text-[var(--color-fg)]"
+            >
+              <option value="">Backlog (no sprint)</option>
+              {sprints.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}{s.isActive ? ' ★' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Priority + Status */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[12px] text-[var(--color-fg-muted)] mb-1" htmlFor="priority">Priority</label>
@@ -136,14 +180,17 @@ export function CreateTaskSlideover({ workspaceId, open, onClose, defaultSprintI
             </div>
           </div>
 
+          {/* Due date */}
           <div>
             <label className="block text-[12px] text-[var(--color-fg-muted)] mb-1" htmlFor="dueAt">Due date</label>
             <input
               id="dueAt"
               type="date"
+              min={today()}
               {...register('dueAt')}
               className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-[var(--radius-md)] px-3 py-2 text-[13px] text-[var(--color-fg)]"
             />
+            {errors.dueAt && <p className="mt-1 text-[11px] text-[var(--color-danger)]">{errors.dueAt.message}</p>}
           </div>
 
           <div className="mt-auto flex gap-2 justify-end pt-2">

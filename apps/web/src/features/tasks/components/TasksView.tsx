@@ -32,10 +32,9 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
   const { data: teams = [] } = useTeamsList(workspaceId);
   const tasks = tasksPage?.items ?? [];
 
-  const [slideoverDefaults, setSlideoverDefaults] = useState<{ sprintId?: string } | null>(null);
+  const [slideoverOpen, setSlideoverOpen] = useState(false);
   const [internalDetailTaskId, setInternalDetailTaskId] = useState<string | null>(null);
 
-  // External selection (from command palette) takes priority
   const detailTaskId = externalDetailTaskId ?? internalDetailTaskId;
   function closeDetail() {
     setInternalDetailTaskId(null);
@@ -69,6 +68,18 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
               {tasks.length} tasks across {sprints.length} {sprints.length === 1 ? 'sprint' : 'sprints'}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setSlideoverOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-[13px] font-medium
+                       bg-[var(--color-accent)] text-white hover:opacity-90 active:scale-[0.97]
+                       transition-all duration-100"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+              <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+            </svg>
+            New task
+          </button>
         </div>
         <TaskFilterBar
           filters={filters}
@@ -97,7 +108,6 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
                 tasks={groups.bySprintId.get(sprint.id) ?? []}
                 workspaceId={workspaceId}
                 members={members}
-                onAddTask={() => setSlideoverDefaults({ sprintId: sprint.id })}
                 onOpenDetail={setInternalDetailTaskId}
                 defaultOpen={sprint.isActive}
               />
@@ -109,7 +119,6 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
               tasks={groups.backlog}
               workspaceId={workspaceId}
               members={members}
-              onAddTask={() => setSlideoverDefaults({})}
               onOpenDetail={setInternalDetailTaskId}
               defaultOpen
             />
@@ -119,9 +128,9 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
 
       <CreateTaskSlideover
         workspaceId={workspaceId}
-        open={slideoverDefaults !== null}
-        onClose={() => setSlideoverDefaults(null)}
-        defaultSprintId={slideoverDefaults?.sprintId}
+        open={slideoverOpen}
+        onClose={() => setSlideoverOpen(false)}
+        sprints={sprints}
       />
 
       <TaskDetailPanel
