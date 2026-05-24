@@ -46,4 +46,12 @@ export class InvitationsRepository {
       data: { acceptedAt: new Date() },
     });
   }
+
+  /** Find any pending (non-expired, not accepted) invite for an email across all workspaces. */
+  async findPendingByEmail(email: string): Promise<InvitationRecord | null> {
+    return this.prisma.workspaceInvitation.findFirst({
+      where: { email, acceptedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

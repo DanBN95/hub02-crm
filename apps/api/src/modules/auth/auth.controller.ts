@@ -10,6 +10,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { User } from '@prisma/client';
 import type { Request, Response } from 'express';
+import { WorkspacesRepository } from '../workspaces/workspaces.repository';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -21,6 +22,7 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly users: UsersService,
     private readonly config: ConfigService,
+    private readonly workspaces: WorkspacesRepository,
   ) {}
 
   @Get('google')
@@ -31,11 +33,18 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  googleCallback(@Req() req: Request, @Res() res: Response) {
+  async googleCallback(@Req() req: Request, @Res() res: Response) {
     const user = req.user as User;
-    const token = this.auth.signToken(user);
     const origin = this.config.get<string>('WEB_ORIGIN', 'http://localhost:5173');
 
+    // If the user has no workspace membership they were not invited — deny access
+    const memberCount = await this.workspaces.memberCount(user.id);
+    if (memberCount === 0) {
+      res.redirect(`${origin}?error=not_invited`);
+      return;
+    }
+
+    const token = this.auth.signToken(user);
     res.cookie('access_token', token, {
       httpOnly: true,
       secure: true,

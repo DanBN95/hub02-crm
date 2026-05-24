@@ -1,7 +1,0 @@
-{
-  "tool_name": "Edit",
-  "tool_input_preview": "{\"file_path\":\"/Users/danbennatan/Desktop/Projects/hub02-crm/apps/web/src/features/tasks/components/TasksView.tsx\",\"old_string\":\"          <div className=\\\"space-y-8 max-w-[1200px]\\\">\",\"new_string\":\"  ...",
-  "error": "File content has changed since it was last read. This commonly happens when a linter or formatter run via Bash rewrites the file. Call Read on this file to refresh, then retry the edit.",
-  "timestamp": "2026-05-19T08:44:49.965Z",
-  "retry_count": 1
-}

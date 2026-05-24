@@ -1,6 +1,15 @@
 const API_BASE = import.meta.env['VITE_API_URL'] ?? '';
 
+function getUrlParam(key: string): string | null {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
 export function LoginPage() {
+  const error = getUrlParam('error');
+  const inviteToken = getUrlParam('invite_token');
+
+  const googleHref = `${API_BASE}/auth/google`;
+
   return (
     <div className="h-screen w-screen bg-[var(--color-bg)] flex items-center justify-center">
       <div className="w-full max-w-sm px-6">
@@ -12,6 +21,26 @@ export function LoginPage() {
           <p className="text-[13px] text-[var(--color-fg-muted)] mt-1">Your team's workspace</p>
         </div>
 
+        {/* Invite banner */}
+        {inviteToken && !error && (
+          <div
+            className="mb-4 px-4 py-3 rounded-[var(--radius-md)] text-[13px]"
+            style={{ background: 'rgba(124,106,247,0.12)', border: '1px solid rgba(124,106,247,0.3)', color: 'var(--color-accent)' }}
+          >
+            🎉 You've been invited! Sign in with Google below to join the workspace.
+          </div>
+        )}
+
+        {/* Error banner */}
+        {error === 'not_invited' && (
+          <div
+            className="mb-4 px-4 py-3 rounded-[var(--radius-md)] text-[13px]"
+            style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+          >
+            Your Google account hasn't been invited to this workspace. Ask an admin to send you an invitation.
+          </div>
+        )}
+
         {/* Card */}
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6">
           <h1 className="text-[15px] font-semibold text-[var(--color-fg)] mb-1">Sign in</h1>
@@ -20,7 +49,7 @@ export function LoginPage() {
           </p>
 
           <a
-            href={`${API_BASE}/auth/google`}
+            href={googleHref}
             className="flex items-center justify-center gap-2.5 w-full px-4 py-2.5
                        bg-[var(--color-surface-2)] hover:bg-[var(--color-surface)]
                        border border-[var(--color-border)] hover:border-[var(--color-border-strong,var(--color-border))]
