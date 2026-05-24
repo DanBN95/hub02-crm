@@ -7,13 +7,18 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { InvitationsService } from './invitations.service';
 
 class CreateInviteDto {
+  @IsEmail()
   email!: string;
+
+  @IsString()
+  @IsOptional()
   role?: string;
 }
 
