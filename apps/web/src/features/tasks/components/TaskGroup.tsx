@@ -15,13 +15,24 @@ interface TaskRowProps {
 }
 
 function TaskRow({ task, workspaceId, members, onOpenDetail }: TaskRowProps) {
+  const [deleting, setDeleting] = useState(false);
   const deleteTask = useDeleteTask(workspaceId);
+
+  const handleDelete = () => {
+    setDeleting(true);
+    setTimeout(() => deleteTask.mutate(task.id), 220);
+  };
 
   return (
     <tr
-      className="group border-b border-[rgba(255,255,255,0.04)] last:border-0 transition-colors duration-100"
-      style={{ ['--row-hover-bg' as string]: 'rgba(255,255,255,0.04)' }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+      className="group border-b border-[rgba(255,255,255,0.04)] last:border-0"
+      style={{
+        transition: 'opacity 200ms cubic-bezier(0.23,1,0.32,1), transform 200ms cubic-bezier(0.23,1,0.32,1)',
+        opacity: deleting ? 0 : 1,
+        transform: deleting ? 'translateX(-16px)' : 'translateX(0)',
+        pointerEvents: deleting ? 'none' : undefined,
+      }}
+      onMouseEnter={(e) => { if (!deleting) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
     >
       {/* Title */}
@@ -60,7 +71,7 @@ function TaskRow({ task, workspaceId, members, onOpenDetail }: TaskRowProps) {
       <td className="pr-4 py-3 w-10 text-right">
         <button
           type="button"
-          onClick={() => { if (confirm('Delete this task?')) deleteTask.mutate(task.id); }}
+          onClick={handleDelete}
           className="opacity-0 group-hover:opacity-100 text-[var(--color-fg-subtle)]
                      hover:text-[var(--color-danger)] p-1 rounded
                      transition-opacity duration-100"
