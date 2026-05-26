@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { Sprint } from '@hub02/shared';
+import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { Button } from '../../../components/ui/Button';
 import { useWorkspace } from '../../../context/WorkspaceContext';
 import { useTasksList } from '../../tasks/tasks.queries';
@@ -74,7 +75,7 @@ interface RowProps {
 
 function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
   const [editing, setEditing] = useState<null | 'name' | 'goal'>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [draft, setDraft] = useState<{ name: string; goal: string }>({
     name: sprint.name,
     goal: sprint.goal ?? '',
@@ -83,11 +84,6 @@ function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
   const updateSprint = useUpdateSprint(workspaceId);
   const activateSprint = useActivateSprint(workspaceId);
   const deleteSprint = useDeleteSprint(workspaceId);
-
-  const handleDelete = () => {
-    setDeleting(true);
-    setTimeout(() => deleteSprint.mutate(sprint.id), 220);
-  };
 
   const save = (field: 'name' | 'goal') => {
     const next = draft[field].trim();
@@ -113,15 +109,16 @@ function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
   const completed = isCompleted(sprint, doneCount, taskCount);
 
   return (
-    <tr
-      className="border-b border-[var(--color-border)] group"
-      style={{
-        transition: 'opacity 200ms cubic-bezier(0.23,1,0.32,1), transform 200ms cubic-bezier(0.23,1,0.32,1), background 100ms',
-        opacity: deleting ? 0 : 1,
-        transform: deleting ? 'translateX(-16px)' : 'translateX(0)',
-        pointerEvents: deleting ? 'none' : undefined,
-      }}
-    >
+    <>
+    <ConfirmModal
+      open={confirmOpen}
+      title="Delete sprint?"
+      message={`"${sprint.name}" will be permanently deleted. Tasks will be moved to backlog.`}
+      confirmLabel="Delete"
+      onConfirm={() => { setConfirmOpen(false); deleteSprint.mutate(sprint.id); }}
+      onCancel={() => setConfirmOpen(false)}
+    />
+    <tr className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface-2)] transition-colors group">
       <td className="pl-4 pr-3 py-2.5 w-[200px]">
         {editing === 'name' ? (
           <input
@@ -251,7 +248,7 @@ function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
       <td className="pr-4 py-2.5 w-12 text-right">
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={() => setConfirmOpen(true)}
           className="opacity-0 group-hover:opacity-100 text-[var(--color-fg-subtle)] hover:text-[var(--color-danger)] p-1 rounded transition-all"
           aria-label="Delete sprint"
         >
@@ -259,6 +256,7 @@ function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
         </button>
       </td>
     </tr>
+    </>
   );
 }
 

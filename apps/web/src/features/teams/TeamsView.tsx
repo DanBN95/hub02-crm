@@ -50,18 +50,24 @@ const ROLE_LABELS: Record<string, string> = {
   viewer: 'Viewer',
   editor: 'Editor',
   admin: 'Admin',
+  owner: 'Admin',   // legacy DB value
+  member: 'Editor', // legacy DB value
 };
 
 const ROLE_COLORS: Record<string, string> = {
   viewer: 'rgba(255,255,255,0.08)',
   editor: 'rgba(124,127,245,0.15)',
   admin: 'rgba(239,180,68,0.15)',
+  owner: 'rgba(239,180,68,0.15)',
+  member: 'rgba(124,127,245,0.15)',
 };
 
 const ROLE_TEXT_COLORS: Record<string, string> = {
   viewer: 'oklch(65% 0 0)',
   editor: 'var(--color-accent)',
   admin: 'oklch(75% 0.16 85)',
+  owner: 'oklch(75% 0.16 85)',
+  member: 'var(--color-accent)',
 };
 
 interface Props {
@@ -123,7 +129,7 @@ function WorkspaceMembersSection({ workspaceId }: { workspaceId: string }) {
   const { notify, confirm } = useNotify();
   const { user, role: currentUserRole } = useWorkspace();
   const queryClient = useQueryClient();
-  const isAdmin = currentUserRole === 'admin';
+  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'owner';
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ['workspace-members', workspaceId],

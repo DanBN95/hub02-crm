@@ -1,5 +1,6 @@
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DoneIcon from '@mui/icons-material/Done';
+import LogoutIcon from '@mui/icons-material/Logout';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -15,6 +16,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
 import { useNotify } from '../../context/NotificationContext';
+import { authApi } from '../../lib/auth';
 import { invitationsApi, type InvitationSummary } from '../../lib/invitations';
 
 interface Props {
@@ -75,14 +77,31 @@ export function WorkspaceSettings({ workspaceId, workspaceName }: Props) {
           px: 3, py: 2.5,
           borderBottom: '1px solid rgba(255,255,255,0.07)',
           flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
-        <Typography variant="h1" sx={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em' }}>
-          Settings
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-          {workspaceName}
-        </Typography>
+        <Box>
+          <Typography variant="h1" sx={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em' }}>
+            Settings
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+            {workspaceName}
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<LogoutIcon sx={{ fontSize: 15 }} />}
+          onClick={async () => {
+            await authApi.logout();
+            window.location.href = '/';
+          }}
+          sx={{ color: 'text.secondary', borderColor: 'rgba(255,255,255,0.12)', fontSize: 12 }}
+        >
+          Log out
+        </Button>
       </Box>
 
       {/* Body */}
