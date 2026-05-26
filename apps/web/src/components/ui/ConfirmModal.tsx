@@ -77,12 +77,12 @@ export function ConfirmModal({
           <button
             type="button"
             onClick={onConfirm}
-            className={`px-5 py-2 rounded-[var(--radius-md)] text-[13px] font-semibold
-                        text-white border-2 transition-all duration-100 active:scale-[0.97]
-                        ${danger
-                          ? 'bg-[var(--color-danger)] border-[var(--color-danger)] hover:opacity-90'
-                          : 'bg-[var(--color-accent)] border-[var(--color-accent)] hover:opacity-90'
-                        }`}
+            className="px-5 py-2 rounded-[var(--radius-md)] text-[13px] font-semibold
+                       text-white border-2 transition-all duration-100 active:scale-[0.97]"
+            style={{
+              background: danger ? '#e53935' : 'var(--color-accent)',
+              borderColor: danger ? '#e53935' : 'var(--color-accent)',
+            }}
           >
             {confirmLabel}
           </button>

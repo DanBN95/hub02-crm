@@ -39,12 +39,7 @@ async function bootstrap(): Promise<{ workspace: WorkspaceSummary | null; user: 
   try {
     user = (await authApi.me()) as CurrentUser;
   } catch {
-    try {
-      await authApi.devLogin();
-      user = (await authApi.me()) as CurrentUser;
-    } catch {
-      return { workspace: null, user: null, role: null };
-    }
+    return { workspace: null, user: null, role: null };
   }
 
   // If ?onboard=1 and user is authenticated, show create-workspace screen
