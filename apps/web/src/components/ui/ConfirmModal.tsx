@@ -55,32 +55,33 @@ export function ConfirmModal({
           animation: 'modalIn 150ms cubic-bezier(0.23,1,0.32,1)',
         }}
       >
-        <div>
-          <p className="text-[15px] font-semibold text-[var(--color-fg)] leading-snug">{title}</p>
+        <div className="flex flex-col gap-3">
+          <p className="text-[16px] font-semibold text-[var(--color-fg)] leading-snug">{title}</p>
           {message && (
-            <p className="text-[13px] text-[var(--color-fg-muted)] mt-1 leading-relaxed">{message}</p>
+            <p className="text-[13px] text-[var(--color-fg-muted)] leading-relaxed">{message}</p>
           )}
         </div>
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-3 justify-end pt-1">
           <button
             type="button"
             onClick={onCancel}
-            className="px-3.5 py-1.5 rounded-[var(--radius-md)] text-[13px] font-medium
-                       text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]
-                       bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3,var(--color-surface-2))]
-                       border border-[var(--color-border)] transition-colors duration-100"
+            className="px-5 py-2 rounded-[var(--radius-md)] text-[13px] font-semibold
+                       text-[var(--color-fg)] bg-transparent
+                       border-2 border-[var(--color-border-strong,rgba(255,255,255,0.2))]
+                       hover:border-[rgba(255,255,255,0.35)] hover:text-[var(--color-fg)]
+                       transition-all duration-100"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className={`px-3.5 py-1.5 rounded-[var(--radius-md)] text-[13px] font-medium
-                        text-white transition-all duration-100 active:scale-[0.97]
+            className={`px-5 py-2 rounded-[var(--radius-md)] text-[13px] font-semibold
+                        text-white border-2 transition-all duration-100 active:scale-[0.97]
                         ${danger
-                          ? 'bg-[var(--color-danger)] hover:opacity-90'
-                          : 'bg-[var(--color-accent)] hover:opacity-90'
+                          ? 'bg-[var(--color-danger)] border-[var(--color-danger)] hover:opacity-90'
+                          : 'bg-[var(--color-accent)] border-[var(--color-accent)] hover:opacity-90'
                         }`}
           >
             {confirmLabel}
