@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Sprint } from '@hub02/shared';
 import { Button } from '../../../components/ui/Button';
+import { useWorkspace } from '../../../context/WorkspaceContext';
 import { useTasksList } from '../../tasks/tasks.queries';
 import {
   useActivateSprint,
@@ -252,6 +253,8 @@ function SprintRow({ sprint, taskCount, doneCount, workspaceId }: RowProps) {
 }
 
 export function SprintsTable({ workspaceId }: { workspaceId: string }) {
+  const { role } = useWorkspace();
+  const canEdit = role !== 'viewer';
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data: sprints = [], isLoading } = useSprintsList(workspaceId);
@@ -280,9 +283,11 @@ export function SprintsTable({ workspaceId }: { workspaceId: string }) {
             {sprints.filter((s) => s.isActive).length} active
           </p>
         </div>
-        <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
-          + Create sprint
-        </Button>
+        {canEdit && (
+          <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
+            + Create sprint
+          </Button>
+        )}
       </header>
 
       <div className="flex-1 overflow-auto">

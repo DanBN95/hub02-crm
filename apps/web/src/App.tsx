@@ -4,6 +4,7 @@ import { Sidebar, type NavKey } from './components/layout/Sidebar';
 import { NotificationProvider } from './context/NotificationContext';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
 import { LoginPage } from './features/auth/LoginPage';
+import { CreateWorkspacePage } from './features/workspace/CreateWorkspacePage';
 import { DocumentsView } from './features/documents/components/DocumentsView';
 import { TeamsView } from './features/teams/TeamsView';
 import { HomeView } from './features/home/HomeView';
@@ -26,8 +27,12 @@ function AppShell() {
     );
   }
 
-  if (!workspace) {
+  if (!user) {
     return <LoginPage />;
+  }
+
+  if (!workspace) {
+    return <CreateWorkspacePage />;
   }
 
   function handleOpenTask(taskId: string) {

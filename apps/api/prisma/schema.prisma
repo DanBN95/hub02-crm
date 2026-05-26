@@ -88,7 +88,7 @@ model WorkspaceMember {
   id          String    @id @default(cuid())
   workspaceId String
   userId      String
-  role        String    @default("member")
+  role        String    @default("editor")
 
   createdAt DateTime @default(now())
 

@@ -37,13 +37,6 @@ export class AuthController {
     const user = req.user as User;
     const origin = this.config.get<string>('WEB_ORIGIN', 'http://localhost:5173');
 
-    // If the user has no workspace membership they were not invited — deny access
-    const memberCount = await this.workspaces.memberCount(user.id);
-    if (memberCount === 0) {
-      res.redirect(`${origin}?error=not_invited`);
-      return;
-    }
-
     const token = this.auth.signToken(user);
     res.cookie('access_token', token, {
       httpOnly: true,
@@ -51,6 +44,12 @@ export class AuthController {
       sameSite: 'none',
       maxAge: 15 * 60 * 1000,
     });
+
+    const memberCount = await this.workspaces.memberCount(user.id);
+    if (memberCount === 0) {
+      res.redirect(`${origin}?onboard=1`);
+      return;
+    }
 
     res.redirect(origin);
   }

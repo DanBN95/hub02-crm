@@ -1,32 +1,21 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from '../email/email.service';
 import { WorkspacesRepository } from '../workspaces/workspaces.repository';
 import { InvitationsRepository } from './invitations.repository';
 
 @Injectable()
 export class InvitationsService {
-  private readonly logger = new Logger(InvitationsService.name);
-
   constructor(
     private readonly repo: InvitationsRepository,
     private readonly workspaces: WorkspacesRepository,
     private readonly config: ConfigService,
-    private readonly email: EmailService,
   ) {}
 
-  async createInvite(workspaceId: string, email: string, role = 'member') {
+  async createInvite(workspaceId: string, email: string, role = 'editor') {
     // Idempotent: return existing pending invite for same email
     const existing = await this.repo.findExisting(workspaceId, email);
     const invite = existing ?? await this.repo.create(workspaceId, email, role);
-    const response = this.toResponse(invite);
-
-    // Send invitation email (non-blocking — don't fail the request if email fails)
-    this.email
-      .sendInvitation({ to: email, inviteUrl: response.inviteUrl, workspaceName: 'hub02' })
-      .catch((err: unknown) => this.logger.error('Failed to send invite email', err));
-
-    return response;
+    return this.toResponse(invite);
   }
 
   async listPending(workspaceId: string) {

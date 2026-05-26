@@ -1,6 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { authApi } from '../lib/auth';
-import { invitationsApi } from '../lib/invitations';
 import { workspacesApi, type WorkspaceSummary } from '../lib/workspaces';
 
 export interface CurrentUser {
@@ -14,47 +13,26 @@ interface WorkspaceState {
   workspace: WorkspaceSummary | null;
   user: CurrentUser | null;
   loading: boolean;
+  role: string | null;
+  refresh: () => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceState>({
   workspace: null,
   user: null,
   loading: true,
+  role: null,
+  refresh: () => undefined,
 });
 
 export function useWorkspace() {
   return useContext(WorkspaceContext);
 }
 
-const INVITE_TOKEN_KEY = 'hub02_pending_invite';
-
-/** Stash invite token from URL into localStorage so it survives the Google OAuth redirect. */
-function stashInviteToken() {
+async function bootstrap(): Promise<{ workspace: WorkspaceSummary | null; user: CurrentUser | null; role: string | null }> {
+  // Check for ?onboard=1 — user just signed up with no workspace
   const params = new URLSearchParams(window.location.search);
-  const token = params.get('invite_token');
-  if (token) {
-    localStorage.setItem(INVITE_TOKEN_KEY, token);
-    // Clean the param from the URL without a page reload
-    params.delete('invite_token');
-    const newSearch = params.toString();
-    window.history.replaceState(null, '', newSearch ? `?${newSearch}` : window.location.pathname);
-  }
-}
-
-async function acceptPendingInvite() {
-  const token = localStorage.getItem(INVITE_TOKEN_KEY);
-  if (!token) return;
-  try {
-    await invitationsApi.accept(token);
-  } catch {
-    // Expired / already accepted — ignore, just clear it
-  } finally {
-    localStorage.removeItem(INVITE_TOKEN_KEY);
-  }
-}
-
-async function bootstrap(): Promise<{ workspace: WorkspaceSummary | null; user: CurrentUser | null }> {
-  stashInviteToken();
+  const onboard = params.get('onboard') === '1';
 
   // Try to authenticate
   let user: CurrentUser | null = null;
@@ -65,29 +43,53 @@ async function bootstrap(): Promise<{ workspace: WorkspaceSummary | null; user: 
       await authApi.devLogin();
       user = (await authApi.me()) as CurrentUser;
     } catch {
-      return { workspace: null, user: null };
+      return { workspace: null, user: null, role: null };
     }
   }
 
-  // Accept any pending invite now that we're authenticated
-  await acceptPendingInvite();
+  // If ?onboard=1 and user is authenticated, show create-workspace screen
+  if (onboard && user) {
+    return { workspace: null, user, role: null };
+  }
 
   try {
     const workspaces = await workspacesApi.list();
-    return { workspace: workspaces[0] ?? null, user };
+    const workspace = workspaces[0] ?? null;
+
+    let role: string | null = null;
+    if (workspace && user) {
+      const members = await workspacesApi.members(workspace.id);
+      const member = members.find((m) => m.id === user!.id);
+      role = member?.role ?? null;
+    }
+
+    return { workspace, user, role };
   } catch {
-    return { workspace: null, user };
+    return { workspace: null, user, role: null };
   }
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<WorkspaceState>({ workspace: null, user: null, loading: true });
+  const [state, setState] = useState<Omit<WorkspaceState, 'refresh'>>({
+    workspace: null,
+    user: null,
+    loading: true,
+    role: null,
+  });
+  const [tick, setTick] = useState(0);
+
+  const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
+    setState((s) => ({ ...s, loading: true }));
     bootstrap()
-      .then(({ workspace, user }) => setState({ workspace, user, loading: false }))
-      .catch(() => setState({ workspace: null, user: null, loading: false }));
-  }, []);
+      .then(({ workspace, user, role }) => setState({ workspace, user, loading: false, role }))
+      .catch(() => setState({ workspace: null, user: null, loading: false, role: null }));
+  }, [tick]);
 
-  return <WorkspaceContext.Provider value={state}>{children}</WorkspaceContext.Provider>;
+  return (
+    <WorkspaceContext.Provider value={{ ...state, refresh }}>
+      {children}
+    </WorkspaceContext.Provider>
+  );
 }

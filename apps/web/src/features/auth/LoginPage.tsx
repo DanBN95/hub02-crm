@@ -5,8 +5,8 @@ function getUrlParam(key: string): string | null {
 }
 
 export function LoginPage() {
-  const error = getUrlParam('error');
   const inviteToken = getUrlParam('invite_token');
+  const onboard = getUrlParam('onboard') === '1';
 
   const googleHref = `${API_BASE}/auth/google`;
 
@@ -22,22 +22,22 @@ export function LoginPage() {
         </div>
 
         {/* Invite banner */}
-        {inviteToken && !error && (
+        {inviteToken && (
           <div
             className="mb-4 px-4 py-3 rounded-[var(--radius-md)] text-[13px]"
             style={{ background: 'rgba(124,106,247,0.12)', border: '1px solid rgba(124,106,247,0.3)', color: 'var(--color-accent)' }}
           >
-            🎉 You've been invited! Sign in with Google below to join the workspace.
+            You've been invited! Sign in with Google below to join the workspace.
           </div>
         )}
 
-        {/* Error banner */}
-        {error === 'not_invited' && (
+        {/* Onboard banner */}
+        {onboard && !inviteToken && (
           <div
             className="mb-4 px-4 py-3 rounded-[var(--radius-md)] text-[13px]"
-            style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+            style={{ background: 'rgba(124,106,247,0.08)', border: '1px solid rgba(124,106,247,0.2)', color: 'var(--color-fg-muted)' }}
           >
-            Your Google account hasn't been invited to this workspace. Ask an admin to send you an invitation.
+            Sign in with Google to get started.
           </div>
         )}
 
@@ -69,7 +69,7 @@ export function LoginPage() {
         </div>
 
         <p className="text-[11px] text-[var(--color-fg-subtle)] text-center mt-4">
-          Only team members with an invitation can access this workspace.
+          Sign in to access or create your workspace.
         </p>
       </div>
     </div>

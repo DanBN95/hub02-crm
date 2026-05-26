@@ -13,6 +13,8 @@ import {
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { WorkspaceRoleGuard } from '../auth/guards/workspace-role.guard';
+import { RequireRole } from '../auth/decorators/workspace-roles.decorator';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentsService } from './comments.service';
 
@@ -27,6 +29,8 @@ export class CommentsController {
   }
 
   @Post('tasks/:taskId/comments')
+  @UseGuards(WorkspaceRoleGuard)
+  @RequireRole('editor')
   create(
     @Param('taskId') taskId: string,
     @Body() dto: CreateCommentDto,

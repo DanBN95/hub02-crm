@@ -10,13 +10,17 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
+import Select from '@mui/material/Select';
 import Skeleton from '@mui/material/Skeleton';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '../../components/ui/Avatar';
 import { useNotify } from '../../context/NotificationContext';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { workspacesApi, type WorkspaceMember } from '../../lib/workspaces';
 import { useMembers } from '../../lib/members.queries';
 import { useTasksList } from '../tasks/tasks.queries';
 import type { TaskWithRelations } from '../tasks/tasks.api';
@@ -40,6 +44,24 @@ const STATUS_COLORS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   BACKLOG: 'Backlog', TODO: 'To Do', IN_PROGRESS: 'In Progress',
   IN_REVIEW: 'In Review', DONE: 'Done',
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  viewer: 'Viewer',
+  editor: 'Editor',
+  admin: 'Admin',
+};
+
+const ROLE_COLORS: Record<string, string> = {
+  viewer: 'rgba(255,255,255,0.08)',
+  editor: 'rgba(124,127,245,0.15)',
+  admin: 'rgba(239,180,68,0.15)',
+};
+
+const ROLE_TEXT_COLORS: Record<string, string> = {
+  viewer: 'oklch(65% 0 0)',
+  editor: 'var(--color-accent)',
+  admin: 'oklch(75% 0.16 85)',
 };
 
 interface Props {
@@ -91,6 +113,134 @@ function TaskRow({ task, onClick }: { task: TaskWithRelations; onClick: () => vo
             <Avatar name={task.assignee.name} avatarUrl={task.assignee.avatarUrl} size={22} />
           </span>
         </Tooltip>
+      )}
+    </Box>
+  );
+}
+
+// ── Workspace Members section ─────────────────────────────────────────────────
+function WorkspaceMembersSection({ workspaceId }: { workspaceId: string }) {
+  const { notify, confirm } = useNotify();
+  const { user, role: currentUserRole } = useWorkspace();
+  const queryClient = useQueryClient();
+  const isAdmin = currentUserRole === 'admin';
+
+  const { data: members = [], isLoading } = useQuery({
+    queryKey: ['workspace-members', workspaceId],
+    queryFn: () => workspacesApi.members(workspaceId),
+  });
+
+  const handleRoleChange = async (member: WorkspaceMember, newRole: string) => {
+    try {
+      await workspacesApi.updateMemberRole(workspaceId, member.id, newRole);
+      await queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
+      notify(`${member.name}'s role updated to ${ROLE_LABELS[newRole] ?? newRole}`, 'success');
+    } catch {
+      notify('Failed to update role', 'error');
+    }
+  };
+
+  const handleRemove = async (member: WorkspaceMember) => {
+    const ok = await confirm(`Remove ${member.name} from the workspace?`, 'Remove member');
+    if (!ok) return;
+    try {
+      await workspacesApi.removeMember(workspaceId, member.id);
+      await queryClient.invalidateQueries({ queryKey: ['workspace-members', workspaceId] });
+      notify(`${member.name} removed`, 'success');
+    } catch {
+      notify('Failed to remove member', 'error');
+    }
+  };
+
+  return (
+    <Box sx={{ px: 3, py: 2.5, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <Typography sx={{ fontSize: 11, fontWeight: 600, color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.07em', mb: 1.5 }}>
+        Workspace Members
+      </Typography>
+
+      {isLoading ? (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} variant="rounded" height={40} sx={{ borderRadius: 1 }} />
+          ))}
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+          {members.map((member) => {
+            const isSelf = member.id === user?.id;
+            return (
+              <Box
+                key={member.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1,
+                  '&:hover': { background: 'rgba(255,255,255,0.03)' },
+                }}
+              >
+                <Avatar name={member.name} avatarUrl={member.avatarUrl} size={28} />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {member.name}{isSelf ? ' (you)' : ''}
+                  </Typography>
+                  <Typography sx={{ fontSize: 11, color: 'text.disabled' }}>{member.email}</Typography>
+                </Box>
+
+                {isAdmin && !isSelf ? (
+                  <Select
+                    value={member.role}
+                    size="small"
+                    onChange={(e) => handleRoleChange(member, e.target.value)}
+                    sx={{
+                      fontSize: 11,
+                      height: 26,
+                      minWidth: 80,
+                      '.MuiSelect-select': { py: 0.25, px: 1 },
+                    }}
+                  >
+                    <MenuItem value="viewer" sx={{ fontSize: 12 }}>Viewer</MenuItem>
+                    <MenuItem value="editor" sx={{ fontSize: 12 }}>Editor</MenuItem>
+                    <MenuItem value="admin" sx={{ fontSize: 12 }}>Admin</MenuItem>
+                  </Select>
+                ) : (
+                  <Chip
+                    label={ROLE_LABELS[member.role] ?? member.role}
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: 10,
+                      background: ROLE_COLORS[member.role] ?? 'rgba(255,255,255,0.08)',
+                      color: ROLE_TEXT_COLORS[member.role] ?? 'text.secondary',
+                      border: '1px solid transparent',
+                    }}
+                  />
+                )}
+
+                {isAdmin && !isSelf && (
+                  <Tooltip title="Remove from workspace">
+                    <Box
+                      onClick={() => handleRemove(member)}
+                      sx={{
+                        cursor: 'pointer',
+                        color: 'text.disabled',
+                        fontSize: 12,
+                        px: 0.5,
+                        borderRadius: 0.5,
+                        transition: 'color 120ms',
+                        '&:hover': { color: 'error.main' },
+                      }}
+                    >
+                      ✕
+                    </Box>
+                  </Tooltip>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
       )}
     </Box>
   );
@@ -377,6 +527,9 @@ export function TeamsView({ workspaceId }: Props) {
           Organize tasks by interest group or department.
         </Typography>
       </Box>
+
+      {/* Workspace Members */}
+      <WorkspaceMembersSection workspaceId={workspaceId} />
 
       {/* Body */}
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
