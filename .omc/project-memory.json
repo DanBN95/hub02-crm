@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1779283903865,
+  "lastScanned": 1779859894715,
   "projectRoot": "/Users/danbennatan/Desktop/Projects/hub02-crm",
   "techStack": {
     "languages": [
@@ -53,14 +53,14 @@
       "path": "apps",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1779283903852,
+      "lastAccessed": 1779859894698,
       "keyFiles": []
     },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 2,
-      "lastAccessed": 1779283903857,
+      "lastAccessed": 1779859894699,
       "keyFiles": [
         "design-system.md",
         "sprint-2-sprint-board.md"
@@ -70,14 +70,14 @@
       "path": "packages",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1779283903857,
+      "lastAccessed": 1779859894705,
       "keyFiles": []
     },
     "apps/api": {
       "path": "apps/api",
       "purpose": "API routes",
       "fileCount": 7,
-      "lastAccessed": 1779283903858,
+      "lastAccessed": 1779859894706,
       "keyFiles": [
         "jest.config.ts",
         "nest-cli.json",
@@ -87,147 +87,39 @@
   },
   "hotPaths": [
     {
-      "path": "apps/api/src/modules/documents/documents.repository.ts",
-      "accessCount": 7,
-      "lastAccessed": 1779293122607,
-      "type": "file"
-    },
-    {
-      "path": "apps/web/src/features/documents/components/DocumentsView.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1779293033279,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/auth/auth.module.ts",
-      "accessCount": 3,
-      "lastAccessed": 1779605159751,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/app.module.ts",
-      "accessCount": 2,
-      "lastAccessed": 1779284985432,
-      "type": "file"
-    },
-    {
-      "path": "apps/web/src/features/tasks/components/TaskDetailPanel.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1779293034069,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/invitations/invitations.repository.ts",
-      "accessCount": 2,
-      "lastAccessed": 1779605069242,
-      "type": "file"
-    },
-    {
       "path": "apps/api/src/modules/auth/auth.controller.ts",
       "accessCount": 2,
-      "lastAccessed": 1779605136345,
+      "lastAccessed": 1779860409205,
       "type": "file"
     },
     {
-      "path": "apps/web/src/features/teams/TeamsView.tsx",
+      "path": "apps/web/src/context/WorkspaceContext.tsx",
       "accessCount": 1,
-      "lastAccessed": 1779284299891,
+      "lastAccessed": 1779860175815,
       "type": "file"
     },
     {
-      "path": "apps/api/src/modules/documents/dto/create-folder.dto.ts",
+      "path": "apps/web/src/lib/auth.ts",
       "accessCount": 1,
-      "lastAccessed": 1779284951872,
+      "lastAccessed": 1779860175996,
       "type": "file"
     },
     {
-      "path": "apps/api/src/modules/documents/dto/upload-document.dto.ts",
+      "path": "apps/web/src/App.tsx",
       "accessCount": 1,
-      "lastAccessed": 1779284953011,
+      "lastAccessed": 1779860180183,
       "type": "file"
     },
     {
-      "path": "apps/api/src/modules/documents/documents.service.ts",
+      "path": "apps/web/src/lib/api-client.ts",
       "accessCount": 1,
-      "lastAccessed": 1779284966560,
+      "lastAccessed": 1779860180763,
       "type": "file"
     },
     {
-      "path": "apps/api/src/modules/documents/documents.controller.ts",
+      "path": "apps/web/src/features/settings/WorkspaceSettings.tsx",
       "accessCount": 1,
-      "lastAccessed": 1779284974587,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/documents/documents.module.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779284975641,
-      "type": "file"
-    },
-    {
-      "path": "apps/web/src/features/documents/documents.api.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779285021674,
-      "type": "file"
-    },
-    {
-      "path": "apps/web/src/features/documents/documents.queries.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779285026425,
-      "type": "file"
-    },
-    {
-      "path": "apps/web/src/context/NotificationContext.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1779285038203,
-      "type": "file"
-    },
-    {
-      "path": "apps/web/src/features/tasks/components/MentionDropdown.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1779285104129,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/main.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779568878932,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/email/email.service.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779605051866,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/email/email.module.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779605055512,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/invitations/invitations.service.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779605078906,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/invitations/invitations.module.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779605089855,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/modules/auth/auth.service.ts",
-      "accessCount": 1,
-      "lastAccessed": 1779605102995,
-      "type": "file"
-    },
-    {
-      "path": "apps/web/src/features/auth/LoginPage.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1779605184856,
+      "lastAccessed": 1779860188870,
       "type": "file"
     }
   ],
