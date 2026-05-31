@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { GoogleBearerStrategy } from './strategies/google-bearer.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
@@ -22,7 +23,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
     }),
   ],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, GoogleStrategy, JwtStrategy, GoogleBearerStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}
