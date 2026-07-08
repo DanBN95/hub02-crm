@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useMembers } from '../../../lib/members.queries';
+import { useNotify } from '../../../context/NotificationContext';
 import { useTeamsList } from '../../teams/teams.queries';
 import { useSprintsList } from '../../sprints/sprints.queries';
-import { useTasksList } from '../tasks.queries';
+import { useTasksList, useUpdateTask } from '../tasks.queries';
 import { useTaskFilters } from '../useTaskFilters';
 import { useWorkspace } from '../../../context/WorkspaceContext';
 import { CreateTaskSlideover } from './CreateTaskSlideover';
@@ -28,15 +29,18 @@ interface Props {
 export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailClose }: Props) {
   const { role } = useWorkspace();
   const canEdit = role !== 'viewer';
+  const { notify } = useNotify();
   const [filters, setFilters, clearFilters] = useTaskFilters();
   const { data: sprints = [], isLoading: sprintsLoading } = useSprintsList(workspaceId);
   const { data: tasksPage, isLoading: tasksLoading } = useTasksList(workspaceId, { limit: 200, ...filters });
   const { data: members = [] } = useMembers(workspaceId);
   const { data: teams = [] } = useTeamsList(workspaceId);
   const tasks = tasksPage?.items ?? [];
+  const updateTask = useUpdateTask(workspaceId);
 
   const [slideoverOpen, setSlideoverOpen] = useState(false);
   const [internalDetailTaskId, setInternalDetailTaskId] = useState<string | null>(null);
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
 
   const detailTaskId = externalDetailTaskId ?? internalDetailTaskId;
   function closeDetail() {
@@ -61,6 +65,23 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
 
   const isLoading = sprintsLoading || tasksLoading;
 
+  function handleDropTask(taskId: string, targetSprintId: string | null) {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || (task.sprintId ?? null) === targetSprintId) return;
+
+    if (targetSprintId === null) {
+      updateTask.mutate({ id: taskId, dto: { sprintId: null, status: 'BACKLOG' } });
+      notify('Moved to Backlog', 'success');
+    } else {
+      const targetSprint = sprints.find((s) => s.id === targetSprintId);
+      const dto = task.status === 'BACKLOG'
+        ? { sprintId: targetSprintId, status: 'TODO' as const }
+        : { sprintId: targetSprintId };
+      updateTask.mutate({ id: taskId, dto });
+      notify(`Moved to ${targetSprint?.name ?? 'sprint'}`, 'success');
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <header className="shrink-0 px-6 py-4 border-b border-[var(--color-border)]">
@@ -69,6 +90,7 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
             <h1 className="text-[20px] font-semibold text-[var(--color-fg)] tracking-tight">Tasks</h1>
             <p className="text-[12px] text-[var(--color-fg-muted)] mt-0.5">
               {tasks.length} tasks across {sprints.length} {sprints.length === 1 ? 'sprint' : 'sprints'}
+              {canEdit && sprints.length > 0 && ' · drag a task between groups to move it'}
             </p>
           </div>
           {canEdit && (
@@ -115,6 +137,12 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
                 members={members}
                 onOpenDetail={setInternalDetailTaskId}
                 defaultOpen={sprint.isActive}
+                sprintId={sprint.id}
+                canEdit={canEdit}
+                onDropTask={handleDropTask}
+                draggingTaskId={draggingTaskId}
+                onDragStartTask={setDraggingTaskId}
+                onDragEndTask={() => setDraggingTaskId(null)}
               />
             ))}
 
@@ -126,6 +154,12 @@ export function TasksView({ workspaceId, externalDetailTaskId, onExternalDetailC
               members={members}
               onOpenDetail={setInternalDetailTaskId}
               defaultOpen
+              sprintId={null}
+              canEdit={canEdit}
+              onDropTask={handleDropTask}
+              draggingTaskId={draggingTaskId}
+              onDragStartTask={setDraggingTaskId}
+              onDragEndTask={() => setDraggingTaskId(null)}
             />
           </div>
         )}

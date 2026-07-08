@@ -40,7 +40,11 @@ export const CreateTaskSchema = z.object({
 });
 export type CreateTaskDto = z.infer<typeof CreateTaskSchema>;
 
-export const UpdateTaskSchema = CreateTaskSchema.partial();
+export const UpdateTaskSchema = CreateTaskSchema.partial().extend({
+  // Unlike create, update must be able to explicitly clear the sprint
+  // (moving a task back to the backlog), so `null` is allowed here.
+  sprintId: z.string().cuid().nullable().optional(),
+});
 export type UpdateTaskDto = z.infer<typeof UpdateTaskSchema>;
 
 export const TaskFiltersSchema = z.object({

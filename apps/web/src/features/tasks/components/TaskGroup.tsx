@@ -13,10 +13,14 @@ interface TaskRowProps {
   workspaceId: string;
   members: Member[];
   onOpenDetail: (taskId: string) => void;
+  draggable: boolean;
+  onDragStart?: (taskId: string) => void;
+  onDragEnd?: () => void;
 }
 
-function TaskRow({ task, workspaceId, members, onOpenDetail }: TaskRowProps) {
+function TaskRow({ task, workspaceId, members, onOpenDetail, draggable, onDragStart, onDragEnd }: TaskRowProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const deleteTask = useDeleteTask(workspaceId);
 
   return (
@@ -31,19 +35,43 @@ function TaskRow({ task, workspaceId, members, onOpenDetail }: TaskRowProps) {
       />
     <tr
       className="group border-b border-[rgba(255,255,255,0.04)] last:border-0 transition-colors duration-100"
+      style={{ opacity: dragging ? 0.4 : 1 }}
+      draggable={draggable}
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/plain', task.id);
+        e.dataTransfer.effectAllowed = 'move';
+        setDragging(true);
+        onDragStart?.(task.id);
+      }}
+      onDragEnd={() => {
+        setDragging(false);
+        onDragEnd?.();
+      }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = ''; }}
     >
       {/* Title */}
       <td className="pl-4 pr-2 py-3 max-w-xs">
-        <button
-          type="button"
-          onClick={() => onOpenDetail(task.id)}
-          className="text-[13px] text-[var(--color-fg)] truncate block w-full text-left
-                     hover:text-[var(--color-accent)] transition-colors duration-100"
-        >
-          {task.title}
-        </button>
+        <div className="flex items-center gap-1.5">
+          {draggable && (
+            <span
+              className="shrink-0 text-[var(--color-fg-subtle)] opacity-0 group-hover:opacity-60 cursor-grab active:cursor-grabbing select-none"
+              style={{ letterSpacing: '-2px', fontSize: 11, lineHeight: 1 }}
+              aria-hidden
+              title="Drag to move"
+            >
+              ⠿
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => onOpenDetail(task.id)}
+            className="text-[13px] text-[var(--color-fg)] truncate block w-full text-left
+                       hover:text-[var(--color-accent)] transition-colors duration-100"
+          >
+            {task.title}
+          </button>
+        </div>
       </td>
 
       {/* Status */}
@@ -94,6 +122,16 @@ interface Props {
   onAddTask?: () => void;
   onOpenDetail: (taskId: string) => void;
   defaultOpen?: boolean;
+  /** Identifies this group as a drop target: `null` means the Backlog group. */
+  sprintId: string | null;
+  /** Whether tasks can be dragged out of / into this group. */
+  canEdit?: boolean;
+  /** Called when a task is dropped onto this group. */
+  onDropTask?: (taskId: string, targetSprintId: string | null) => void;
+  /** Id of the task currently being dragged anywhere in the page (for drop-target highlighting). */
+  draggingTaskId?: string | null;
+  onDragStartTask?: (taskId: string) => void;
+  onDragEndTask?: () => void;
 }
 
 export function TaskGroup({
@@ -106,18 +144,47 @@ export function TaskGroup({
   onAddTask,
   onOpenDetail,
   defaultOpen = true,
+  sprintId,
+  canEdit = true,
+  onDropTask,
+  draggingTaskId,
+  onDragStartTask,
+  onDragEndTask,
 }: Props) {
   const [open, setOpen] = useState(defaultOpen);
+  const [dragOver, setDragOver] = useState(false);
+
+  const isDropTarget = canEdit && !!draggingTaskId && !tasks.some((t) => t.id === draggingTaskId);
 
   return (
     <div
-      className={`rounded-[var(--radius-lg)]`}
+      className="rounded-[var(--radius-lg)] transition-shadow duration-150"
       style={{
         background: 'color-mix(in oklch, var(--color-surface) 82%, transparent)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.07)',
-        boxShadow: '0 4px 24px oklch(0% 0 0 / 0.25), inset 0 1px 0 rgba(255,255,255,0.06)',
+        border: dragOver ? '1px dashed var(--color-accent)' : '1px solid rgba(255,255,255,0.07)',
+        boxShadow: dragOver
+          ? '0 4px 24px oklch(0% 0 0 / 0.25), 0 0 0 3px color-mix(in oklch, var(--color-accent) 18%, transparent)'
+          : '0 4px 24px oklch(0% 0 0 / 0.25), inset 0 1px 0 rgba(255,255,255,0.06)',
+      }}
+      onDragOver={(e) => {
+        if (!isDropTarget) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (!dragOver) setDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget as Node)) {
+          setDragOver(false);
+        }
+      }}
+      onDrop={(e) => {
+        if (!isDropTarget) return;
+        e.preventDefault();
+        setDragOver(false);
+        const taskId = e.dataTransfer.getData('text/plain');
+        if (taskId) onDropTask?.(taskId, sprintId);
       }}
     >
       {/* Group header */}
@@ -148,8 +215,8 @@ export function TaskGroup({
             {subtitle}
           </span>
         )}
-        <span className="ml-auto text-[11px] text-[var(--color-fg-subtle)] tabular-nums">
-          {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+        <span className="ml-auto text-[11px] tabular-nums" style={{ color: dragOver ? 'var(--color-accent)' : 'var(--color-fg-subtle)' }}>
+          {dragOver ? 'Drop to move here' : `${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`}
         </span>
       </div>
 
@@ -170,7 +237,7 @@ export function TaskGroup({
               {tasks.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-[12px] text-[var(--color-fg-subtle)]">
-                    No tasks yet
+                    {dragOver ? 'Drop to move here' : 'No tasks yet'}
                   </td>
                 </tr>
               ) : (
@@ -181,6 +248,9 @@ export function TaskGroup({
                     workspaceId={workspaceId}
                     members={members}
                     onOpenDetail={onOpenDetail}
+                    draggable={canEdit}
+                    onDragStart={onDragStartTask}
+                    onDragEnd={onDragEndTask}
                   />
                 ))
               )}
